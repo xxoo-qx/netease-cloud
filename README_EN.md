@@ -57,7 +57,7 @@ cp .env.example .env
 python run.py
 ```
 
-Open `http://127.0.0.1:8080/` after starting the server.
+Open `http://127.0.0.1:18473/` after starting the server.
 
 ## 📖 API Documentation
 
@@ -164,13 +164,13 @@ Replace **`YOUR_USER_ID`** with the login `user_id` and send the admin cookie (e
 #### 1) Check NetEase session for that user
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/check"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/check"
 ```
 
 #### 2) Playids
 
 ```bash
-curl -X POST "http://127.0.0.1:8080/api/users/YOUR_USER_ID/playids" \
+curl -X POST "http://127.0.0.1:18473/api/users/YOUR_USER_ID/playids" \
   -H "Content-Type: application/json" \
   -d "{\"ids\":[3373818852,3373845775],\"mix_enabled\":false,\"gap_min\":5,\"gap_max\":10}"
 ```
@@ -178,13 +178,13 @@ curl -X POST "http://127.0.0.1:8080/api/users/YOUR_USER_ID/playids" \
 #### 3) Query play record
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/play-record"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/play-record"
 ```
 
 All-time record:
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/play-record?record_type=0"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/play-record?record_type=0"
 ```
 
 ## 🏗️ Project Structure

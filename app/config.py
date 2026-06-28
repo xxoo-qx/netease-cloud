@@ -13,7 +13,7 @@ _default_user_data = Path(__file__).resolve().parent.parent / "user_data"
 USER_DATA_DIR = Path(os.getenv("USER_DATA_DIR", str(_default_user_data))).resolve()
 
 HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", "8080"))
+PORT = int(os.getenv("PORT", "18473"))
 PROXY_URL = os.getenv("PROXY_URL")
 NCMM_PROJECT_DIR = Path(
     os.getenv("NCMM_PROJECT_DIR", str(_PROJECT_ROOT.parent / "ncmm-main"))

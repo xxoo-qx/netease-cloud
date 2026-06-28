@@ -59,7 +59,7 @@ cp .env.example .env
 python run.py
 ```
 
-服务启动后打开 `http://127.0.0.1:8080/`。
+服务启动后打开 `http://127.0.0.1:18473/`。
 
 ## 🐳 Docker 运行（复用官方 `ncmm` 镜像）
 
@@ -123,7 +123,7 @@ docker compose up --build -d
 启动后访问：
 
 ```text
-http://127.0.0.1:8080/
+http://127.0.0.1:18473/
 ```
 
 ### Docker 环境文件说明
@@ -504,13 +504,13 @@ GET /api/users/{user_id}/play-record?record_type=1
 #### 1) 检查该用户网易云会话
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/check"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/check"
 ```
 
 #### 2) Playids 刷歌
 
 ```bash
-curl -X POST "http://127.0.0.1:8080/api/users/YOUR_USER_ID/playids" ^
+curl -X POST "http://127.0.0.1:18473/api/users/YOUR_USER_ID/playids" ^
   -H "Content-Type: application/json" ^
   -d "{\"ids\":[3373818852,3373845775],\"mix_enabled\":false,\"gap_min\":5,\"gap_max\":10}"
 ```
@@ -518,13 +518,13 @@ curl -X POST "http://127.0.0.1:8080/api/users/YOUR_USER_ID/playids" ^
 #### 3) 查询听歌记录
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/play-record"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/play-record"
 ```
 
 查全部时间：
 
 ```bash
-curl "http://127.0.0.1:8080/api/users/YOUR_USER_ID/play-record?record_type=0"
+curl "http://127.0.0.1:18473/api/users/YOUR_USER_ID/play-record?record_type=0"
 ```
 
 ## 🏗️ 项目结构
