@@ -4,14 +4,14 @@ import asyncio
 import datetime as dt
 import re
 import shutil
-import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import yaml
 
-from app.config import NCMM_BIN, NCMM_HOME_DIR, NCMM_PROJECT_DIR, USER_DATA_DIR
+from app.config import NCMM_BIN, NCMM_HOME_DIR, NCMM_IDS_INLINE_LIMIT, NCMM_PROJECT_DIR, USER_DATA_DIR
 from app.models.schemas import PlayidsAccountTask
+from app.services.ncmm_runtime import run_ncmm_subprocess
 from app.user_store import UserRecord, list_users_public, load_user, ncmm_workspace_dir_for_user_id
 
 _RUN_TARGET_RE = re.compile(r"本次目标刷播=(\d+)首")
@@ -92,6 +92,27 @@ async def _write_temp_cookie_file(user: UserRecord, workdir: Path) -> Path:
     header = _build_cookie_header(user)
     await asyncio.to_thread(path.write_text, header, "utf-8")
     return path
+
+
+async def _write_generated_ids_file(workdir: Path, ids: list[int]) -> Path:
+    path = workdir / "generated-inline-ids.txt"
+    text = "\n".join(str(track_id) for track_id in ids)
+    await asyncio.to_thread(path.write_text, text, "utf-8")
+    return path
+
+
+async def _prepare_effective_playids_options(workdir: Path, opts: PlayidsOptions) -> PlayidsOptions:
+    ids = list(opts.ids or [])
+    if len(ids) <= NCMM_IDS_INLINE_LIMIT:
+        return opts
+    generated_ids_file = await _write_generated_ids_file(workdir, ids)
+    if opts.ids_file is None:
+        effective_ids_file: str | list[str] = str(generated_ids_file)
+    elif isinstance(opts.ids_file, list):
+        effective_ids_file = [str(generated_ids_file), *opts.ids_file]
+    else:
+        effective_ids_file = [str(generated_ids_file), opts.ids_file]
+    return replace(opts, ids=None, ids_file=effective_ids_file)
 
 
 def _normalized_cookie_output_path(cookie_file: Path) -> Path:
@@ -291,16 +312,7 @@ def _build_ncmm_command(home_dir: Path, cookie_file: Path, config_path: Path, op
 
 
 async def _run_ncmm_command(command: list[str]) -> tuple[int, str, str]:
-    completed = await asyncio.to_thread(
-        subprocess.run,
-        command,
-        cwd=str(NCMM_PROJECT_DIR),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    completed = await run_ncmm_subprocess(command, cwd=NCMM_PROJECT_DIR)
     return completed.returncode, completed.stdout, completed.stderr
 
 
@@ -348,9 +360,10 @@ async def run_playids_via_ncmm(user: UserRecord, opts: PlayidsOptions) -> dict[s
     cookie_import_file = await _write_temp_cookie_file(user, workdir)
     cookie_file = _normalized_cookie_output_path(cookie_import_file)
     config_path = workdir / "config.yaml"
-    await _write_temp_config(config_path, cookie_file, database_dir, opts)
+    effective_opts = await _prepare_effective_playids_options(workdir, opts)
+    await _write_temp_config(config_path, cookie_file, database_dir, effective_opts)
     login_command = _build_ncmm_login_command(home_dir, cookie_import_file, cookie_file, config_path)
-    command = _build_ncmm_command(home_dir, cookie_file, config_path, opts)
+    command = _build_ncmm_command(home_dir, cookie_file, config_path, effective_opts)
     ncmm_log_path = workdir / "ncmm.log"
     try:
         login_code, login_stdout, login_stderr = await _run_ncmm_command(login_command)
@@ -390,6 +403,7 @@ async def run_playids_via_ncmm(user: UserRecord, opts: PlayidsOptions) -> dict[s
         "total_success": success,
         "daily_completed": parsed["daily_completed"],
         "daily_target": parsed["daily_target"],
+        "generated_ids_file": str((latest_dir / "generated-inline-ids.txt").resolve()) if len(list(opts.ids or [])) > NCMM_IDS_INLINE_LIMIT else None,
         "login_command": login_command,
         "stdout": stdout,
         "stderr": stderr,

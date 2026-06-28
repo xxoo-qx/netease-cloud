@@ -24,6 +24,9 @@ NCMM_BIN = Path(
 NCMM_HOME_DIR = Path(
     os.getenv("NCMM_HOME_DIR", str(NCMM_PROJECT_DIR / ".work"))
 ).resolve()
+NCMM_MAX_CONCURRENT = max(1, int(os.getenv("NCMM_MAX_CONCURRENT", "2")))
+NCMM_MAX_OUTPUT_CHARS = max(1024, int(os.getenv("NCMM_MAX_OUTPUT_CHARS", "12000")))
+NCMM_IDS_INLINE_LIMIT = max(1, int(os.getenv("NCMM_IDS_INLINE_LIMIT", "1000")))
 
 # WeAPI 请求在代理断连、远端空响应等瞬态错误时的额外重试次数（首次请求不计入）
 WEAPI_MAX_RETRIES = max(0, int(os.getenv("WEAPI_MAX_RETRIES", "3")))

@@ -431,6 +431,12 @@ NCMM_HOME_DIR=D:\py\ncmm-main\.work
 程序会自动使用 `NCMM_HOME_DIR/<user_id>` 作为每个账号各自的 `ncmm --home` 目录。
 所以像 `D:\py\ncmm-main\.work` 这样的父级路径可以继续用；只有当你之前把它写成某个具体账号子目录时，才需要改回父级根目录。
 
+为了避免任务很多时桥接层占用过高，这一层还提供了三个可选环境变量：
+
+- `NCMM_MAX_CONCURRENT`：同一进程内最多同时运行多少个 `ncmm` 子进程，默认 `2`
+- `NCMM_MAX_OUTPUT_CHARS`：每个子进程保留到接口响应里的 `stdout/stderr` 最大字符数，默认 `12000`
+- `NCMM_IDS_INLINE_LIMIT`：显式歌曲 ID 超过这个数量时，桥接层自动把它们写入临时 `ids_file`，避免超长命令行，默认 `1000`
+
 这样 Web 端桥接 `playids`、`task`、`musician*` 时会优先直调 exe，不再依赖请求时即时 `go run` 编译。
   daily_max: 200
   run_min: 0

@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import re
-import subprocess
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +10,7 @@ from pathlib import Path
 import yaml
 
 from app.config import NCMM_BIN, NCMM_HOME_DIR, NCMM_PROJECT_DIR, USER_DATA_DIR
+from app.services.ncmm_runtime import CapturedProcessResult, run_ncmm_subprocess
 from app.user_store import UserRecord, ncmm_workspace_dir_for_user_id
 
 _TASK_SUCCESS_RE = re.compile(r"\[task\]\s*✅\s*\[(.+?)\]\s*执行\s*成功")
@@ -47,14 +47,6 @@ class NcmmMusicianBridgeOptions:
     play_pool: BridgePlayPoolOptions | None = None
     enable_vip_note: bool = False
     enable_vip_play: bool = False
-
-
-@dataclass(slots=True)
-class NcmmCommandResult:
-    returncode: int
-    stdout: str
-    stderr: str
-    command: list[str]
 
 
 def _build_cookie_header(user: UserRecord) -> str:
@@ -254,23 +246,8 @@ async def _write_task_config(
     await asyncio.to_thread(config_path.write_text, text, "utf-8")
 
 
-async def _run_ncmm_command(command: list[str]) -> NcmmCommandResult:
-    completed = await asyncio.to_thread(
-        subprocess.run,
-        command,
-        cwd=str(NCMM_PROJECT_DIR),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    return NcmmCommandResult(
-        returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        command=command,
-    )
+async def _run_ncmm_command(command: list[str]) -> CapturedProcessResult:
+    return await run_ncmm_subprocess(command, cwd=NCMM_PROJECT_DIR)
 
 
 def _build_task_command(home_dir: Path, config_path: Path) -> list[str]:
@@ -309,7 +286,7 @@ def _build_direct_command(home_dir: Path, config_path: Path, subcommand: str) ->
     ]
 
 
-def _summarize_command_failure(action: str, result: NcmmCommandResult) -> str:
+def _summarize_command_failure(action: str, result: CapturedProcessResult) -> str:
     stdout = result.stdout.strip()
     stderr = result.stderr.strip()
     parts = [f"{action} 执行失败(exit={result.returncode})"]
