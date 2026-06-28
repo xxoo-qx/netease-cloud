@@ -41,7 +41,7 @@ class AdminSessionGuardMiddleware(BaseHTTPMiddleware):
         if session.get("admin_logged_in"):
             return await call_next(request)
         # 机器/脚本调用 API 时用 401 JSON；浏览器访问文档页用跳转登录
-        if path.startswith("/api"):
+        if path.startswith("/api") or path.startswith("/admin/api"):
             return JSONResponse(
                 status_code=401,
                 content={"detail": "需要管理员登录"},
