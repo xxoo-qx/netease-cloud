@@ -67,7 +67,7 @@ python run.py
 
 - 构建镜像时直接从官方镜像 `ghcr.io/3899/ncmm:latest` 提取 Linux 版 `ncmm` 二进制
 - 在 `netease-cloud-main` 容器内直接调用这个二进制
-- 把 `user_data` 和 `ncmm` 工作目录挂载到宿主机，保留登录态、桥接配置和运行缓存
+- 把 `user_data` 和 `ncmm` 工作区根目录挂载到宿主机，保留登录态、桥接配置和运行缓存
 
 仓库已附带：
 
@@ -153,7 +153,18 @@ NCMM_HOME_DIR=/data/ncmm-home
 Compose 默认挂载：
 
 - `./user_data:/data/user_data`：Web 登录态与用户数据
-- `./docker-data/ncmm-home:/data/ncmm-home`：`ncmm` 的桥接工作目录、cookie 转换结果和运行缓存
+- `./docker-data/ncmm-home:/data/ncmm-home`：`ncmm` 的用户工作目录、cookie 转换结果和运行缓存（按 `user_id` 分子目录）
+
+### 旧版本迁移
+
+如果你之前运行过旧版本，`ncmm` 工作目录可能还在 `user_data/ncmm_workspaces/<user_id>` 下。更新到新镜像后，建议先迁移到 `NCMM_HOME_DIR` 对应挂载目录：
+
+```bash
+mkdir -p ./docker-data/ncmm-home
+cp -a ./user_data/ncmm_workspaces/. ./docker-data/ncmm-home/
+```
+
+迁移完成并验证任务正常后，再决定是否删除旧的 `user_data/ncmm_workspaces`。
 
 ### 需要修改的配置
 
@@ -398,7 +409,7 @@ POST /api/users/{user_id}/ncmm/musician
 默认桥接目录：
 
 - `NCMM_PROJECT_DIR` 默认指向 `../ncmm-main`
-- `NCMM_HOME_DIR` 默认指向 `NCMM_PROJECT_DIR/.work`
+- `NCMM_HOME_DIR` 默认指向 `NCMM_PROJECT_DIR/.work`，并作为 `ncmm` 的多用户工作区根目录使用
 - `NCMM_BIN` 默认指向 `NCMM_PROJECT_DIR/bin/ncmm.exe`
 
 推荐做法是在 `ncmm-main` 下先编译 exe：
@@ -415,6 +426,10 @@ NCMM_PROJECT_DIR=D:\py\ncmm-main
 NCMM_BIN=D:\py\ncmm-main\bin\ncmm.exe
 NCMM_HOME_DIR=D:\py\ncmm-main\.work
 ```
+
+注意：这里的 `NCMM_HOME_DIR` 现在表示“根目录”而不是“单账号目录”。
+程序会自动使用 `NCMM_HOME_DIR/<user_id>` 作为每个账号各自的 `ncmm --home` 目录。
+所以像 `D:\py\ncmm-main\.work` 这样的父级路径可以继续用；只有当你之前把它写成某个具体账号子目录时，才需要改回父级根目录。
 
 这样 Web 端桥接 `playids`、`task`、`musician*` 时会优先直调 exe，不再依赖请求时即时 `go run` 编译。
   daily_max: 200

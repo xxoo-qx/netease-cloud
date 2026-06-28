@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from app.config import USER_DATA_DIR
+from app.config import NCMM_HOME_DIR, USER_DATA_DIR
 
 _file_locks: dict[str, threading.Lock] = {}
 _file_locks_guard = threading.Lock()
@@ -38,7 +38,7 @@ def ncmm_workspace_dir_for_user_id(user_id: str) -> Path:
     safe = "".join(c for c in user_id if c.isalnum() or c in "-_")
     if not safe or safe != user_id:
         raise ValueError("invalid user_id")
-    path = USER_DATA_DIR / "ncmm_workspaces" / safe
+    path = NCMM_HOME_DIR / safe
     path.mkdir(parents=True, exist_ok=True)
     return path
 
