@@ -10,6 +10,10 @@ from starlette.responses import JSONResponse, RedirectResponse
 def _requires_admin_session(path: str) -> bool:
     """未登录管理员时拒绝访问的路径（返回 True）。"""
     p = path.split("?", 1)[0]
+    if p == "/admin/api" or p.startswith("/admin/api/"):
+        if p == "/admin/api/login" or p.startswith("/admin/api/login/"):
+            return False
+        return True
     if p == "/welcome" or p.startswith("/welcome/"):
         return True
     if p == "/openapi.json":
