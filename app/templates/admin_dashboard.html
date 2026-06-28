@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员面板 · 用户管理</title>
+  <link rel="icon" href="/static/icon.png" type="image/png" />
+  <style>
+    :root {
+      --background-color: #f0f2f5;
+      --card-background-color: #ffffff;
+      --text-color: #333;
+      --light-text-color: #666;
+      --primary-color: #007bff;
+      --primary-hover-color: #0056b3;
+      --danger-color: #dc3545;
+      --danger-hover-color: #c82333;
+      --border-color: #e9ecef;
+      --info-background-color: #e7f3ff;
+      --info-text-color: #0056b3;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background-color: var(--card-background-color);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 2em;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    h2 {
+      color: var(--light-text-color);
+      font-size: 1.5em;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .section-card {
+      background-color: var(--card-background-color);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .section-card:last-of-type {
+      margin-bottom: 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--card-background-color);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    .user-info {
+      font-size: 0.95em;
+      color: var(--text-color);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .user-info strong {
+      color: var(--primary-color);
+      margin-right: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:hover {
+      background-color: var(--primary-hover-color);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .danger-button {
+      background-color: var(--danger-color);
+    }
+
+    .danger-button:hover {
+      background-color: var(--danger-hover-color);
+    }
+
+    /* 操作区：按功能区分颜色 */
+    .btn-op-level {
+      background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+    }
+    .btn-op-level:hover {
+      background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+    }
+
+    .btn-op-sign {
+      background: linear-gradient(180deg, #059669 0%, #047857 100%);
+    }
+    .btn-op-sign:hover {
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    }
+
+    .btn-op-playids {
+      background: linear-gradient(180deg, #b45309 0%, #92400e 100%);
+    }
+    .btn-op-playids:hover {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 100%);
+      box-shadow: 0 4px 12px rgba(180, 83, 9, 0.35);
+    }
+
+    .btn-op-ncmm-task {
+      background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
+    }
+    .btn-op-ncmm-task:hover {
+      background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%);
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+    }
+
+    .btn-op-musician {
+      background: linear-gradient(180deg, #be123c 0%, #9f1239 100%);
+    }
+    .btn-op-musician:hover {
+      background: linear-gradient(180deg, #e11d48 0%, #be123c 100%);
+      box-shadow: 0 4px 12px rgba(190, 18, 60, 0.35);
+    }
+
+    .btn-daka {
+      background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);
+    }
+    .btn-daka:hover {
+      background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+    }
+
+    .btn-lbc {
+      background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
+    }
+    .btn-lbc:hover {
+      background: linear-gradient(180deg, #14b8a6 0%, #0d9488 100%);
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+    }
+
+    .btn-remark {
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-remark:hover {
+      background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .admin-footer-actions {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: center;
+    }
+
+    .ghost-button {
+      background-color: var(--light-text-color);
+      color: white;
+    }
+
+    .ghost-button:hover {
+      background-color: #555;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .info-message {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 6px;
+      background-color: var(--info-background-color);
+      color: var(--info-text-color);
+      border: 1px solid var(--primary-color);
+      font-size: 0.95em;
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .info-message.info-message--html {
+      text-align: left;
+      white-space: normal;
+      line-height: 1.6;
+    }
+
+    .info-message__title {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .info-message__summary {
+      margin-bottom: 8px;
+    }
+
+    .info-message__details {
+      margin-top: 8px;
+    }
+
+    .info-message__details summary {
+      cursor: pointer;
+      color: #1d4ed8;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .info-message__details ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .info-message__details li {
+      margin: 4px 0;
+    }
+
+    .info-message.error {
+      background-color: #fde8e8;
+      color: #721c24;
+      border-color: var(--danger-color);
+    }
+
+    .info-message:empty {
+      display: none;
+    }
+
+    .level-detail-panel {
+      display: none;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      padding: 16px 18px;
+      border-radius: 8px;
+      background-color: var(--card-background-color);
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      line-height: 1.55;
+      max-height: min(480px, 60vh);
+      overflow: auto;
+      text-align: left;
+    }
+
+    .level-view__title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--light-text-color);
+      margin: 0 0 10px;
+    }
+
+    .level-view__level {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      letter-spacing: 0.02em;
+      margin-bottom: 10px;
+    }
+
+    .level-view__bar-track {
+      height: 10px;
+      background: #e9ecef;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .level-view__bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-hover-color));
+      min-width: 0;
+      transition: width 0.25s ease;
+    }
+
+    .level-view__progress-caption {
+      font-size: 0.85em;
+      color: var(--light-text-color);
+      margin-bottom: 14px;
+    }
+
+    .level-view__grid {
+      display: grid;
+      gap: 10px 16px;
+      margin-bottom: 14px;
+    }
+
+    .level-view__item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 12px;
+      align-items: baseline;
+      font-size: 0.92em;
+    }
+
+    .level-view__item dt {
+      margin: 0;
+      color: var(--light-text-color);
+      white-space: nowrap;
+    }
+
+    .level-view__item dd {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .level-view__section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .level-view__section h4 {
+      margin: 0 0 8px;
+      font-size: 0.88em;
+      color: var(--light-text-color);
+      font-weight: 600;
+    }
+
+    .level-view__benefits {
+      margin: 0;
+      padding-left: 1.2em;
+      color: var(--text-color);
+      font-size: 0.92em;
+    }
+
+    .level-view__benefits li {
+      margin-bottom: 4px;
+    }
+
+    .level-view--err {
+      color: var(--danger-color);
+    }
+
+    .level-view__raw {
+      margin-top: 12px;
+      font-size: 12px;
+    }
+
+    .level-view__raw summary {
+      cursor: pointer;
+      color: var(--light-text-color);
+      user-select: none;
+    }
+
+    .level-view__raw pre {
+      margin: 8px 0 0;
+      padding: 10px;
+      background: var(--background-color);
+      border-radius: 6px;
+      overflow: auto;
+      max-height: 200px;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .ops {
+      margin-top: 4px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .ops-title {
+      font-size: 0.85em;
+      color: var(--light-text-color);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .ops-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .ops-form input[type="text"],
+    .ops-form input[type="number"],
+    .ops-form select,
+    .ops-form textarea {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9em;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .ops-form input:focus,
+    .ops-form select:focus,
+    .ops-form textarea:focus {
+      border-color: var(--primary-color);
+    }
+
+    .ops-form textarea {
+      min-height: 78px;
+      resize: vertical;
+      width: min(100%, 360px);
+      font-family: Consolas, 'Courier New', monospace;
+    }
+
+    .ops-form select {
+      min-width: 120px;
+      background: #fff;
+    }
+
+    .ops-form input.narrow {
+      width: 72px;
+    }
+
+    .ops-form input.mid {
+      width: 120px;
+    }
+
+    .ops-form label {
+      font-size: 0.85em;
+      color: var(--light-text-color);
+    }
+
+    .playids-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #fffaf2 0%, #fff 100%);
+    }
+
+    .playids-panel.is-open {
+      display: block;
+    }
+
+    .playids-panel__title {
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #9a3412;
+    }
+
+    .playids-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px 12px;
+    }
+
+    .playids-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .playids-field small {
+      font-size: 0.78em;
+      color: var(--light-text-color);
+      line-height: 1.45;
+    }
+
+    .playids-field--full {
+      grid-column: 1 / -1;
+    }
+
+    .playids-help {
+      margin-top: 10px;
+      font-size: 0.82em;
+      color: var(--light-text-color);
+      line-height: 1.5;
+    }
+
+    .playids-inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .playids-source-only {
+      display: none;
+    }
+
+    .playids-source-only.is-visible {
+      display: flex;
+    }
+
+    .playids-field.js-musician-vip-only,
+    .ncmm-field.js-musician-enable-vip-play-field,
+    .ncmm-field.js-musician-enable-vip-note-field {
+      display: none;
+    }
+
+    .playids-field.js-musician-vip-only.is-visible,
+    .ncmm-field.js-musician-enable-vip-play-field.is-visible,
+    .ncmm-field.js-musician-enable-vip-note-field.is-visible {
+      display: flex;
+    }
+
+    .ncmm-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #f4fffd 0%, #fff 100%);
+    }
+
+    .ncmm-panel.is-open {
+      display: block;
+    }
+
+    .ncmm-panel--musician {
+      background: linear-gradient(180deg, #fff4f7 0%, #fff 100%);
+    }
+
+    .ncmm-panel__title {
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #155e75;
+    }
+
+    .ncmm-panel--musician .ncmm-panel__title {
+      color: #9f1239;
+    }
+
+    .ncmm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px 12px;
+    }
+
+    .ncmm-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ncmm-field small {
+      font-size: 0.78em;
+      color: var(--light-text-color);
+      line-height: 1.45;
+    }
+
+    .ncmm-checklist {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px 12px;
+      width: 100%;
+    }
+
+    .ncmm-checkitem {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--border-color);
+      min-height: 58px;
+    }
+
+    .ncmm-checkitem input {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .ncmm-help {
+      margin-top: 10px;
+      font-size: 0.82em;
+      color: var(--light-text-color);
+      line-height: 1.5;
+    }
+
+    .ncmm-inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .ncmm-result-hint {
+      margin-top: 8px;
+      font-size: 0.78em;
+      color: var(--light-text-color);
+    }
+
+    .remark-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+    }
+
+    .remark-line .remark-text {
+      min-height: 1.2em;
+    }
+
+    button.remark-edit-btn {
+      padding: 2px 10px;
+      font-size: 0.8em;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .search-container {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: var(--background-color);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.95em;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .search-clear-btn {
+      padding: 10px 20px;
+      background-color: var(--light-text-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.3s;
+    }
+
+    .search-clear-btn:hover {
+      background-color: #555;
+    }
+
+    .search-hint {
+      font-size: 0.85em;
+      color: var(--light-text-color);
+      margin-top: 5px;
+    }
+
+    .search-result-info {
+      font-size: 0.9em;
+      color: var(--primary-color);
+      font-weight: 500;
+      margin-top: 5px;
+    }
+
+    .workspace-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .workspace-tab {
+      background: linear-gradient(180deg, #fff 0%, #eef4ff 100%);
+      color: #1e3a8a;
+      border: 1px solid #c7d2fe;
+      box-shadow: none;
+    }
+
+    .workspace-tab.is-active {
+      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+      border-color: #1d4ed8;
+    }
+
+    .workspace-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .workspace-metric {
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .workspace-metric__label {
+      font-size: 0.82em;
+      color: var(--light-text-color);
+      margin-bottom: 6px;
+    }
+
+    .workspace-metric__value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .binding-panel {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #f8fffb 0%, #fff 100%);
+    }
+
+    .binding-panel__title {
+      font-size: 0.88em;
+      font-weight: 600;
+      color: #166534;
+      margin-bottom: 8px;
+    }
+
+    .binding-form {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .binding-form select {
+      min-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .binding-hint {
+      margin-top: 8px;
+      font-size: 0.8em;
+      color: var(--light-text-color);
+      line-height: 1.45;
+    }
+
+    .main-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.8em;
+      font-weight: 600;
+      border: 1px solid #bfdbfe;
+    }
+
+    li.search-empty {
+      color: var(--light-text-color);
+      text-align: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>管理员面板</h1>
+
+    <div id="msg" class="info-message" style="display: none;"></div>
+    <div id="levelDetailPanel" class="level-detail-panel"></div>
+
+    <div class="section-card">
+      <h2>账号工作台</h2>
+      <div class="workspace-tabs">
+        <button type="button" class="workspace-tab is-active" data-workspace="main">主账号工作台</button>
+        <button type="button" class="workspace-tab" data-workspace="secondary">辅助账号池</button>
+      </div>
+      <div class="workspace-summary" id="workspaceSummary"></div>
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" id="userSearchInput" class="search-input" placeholder="搜索用户名、ID或备注信息..." />
+          <select id="roleFilterSelect" class="search-role-select" aria-label="按账号角色筛选">
+            <option value="all" selected>全部角色</option>
+            <option value="main">仅主账号</option>
+            <option value="secondary">仅辅助账号</option>
+          </select>
+          <button type="button" id="searchClearBtn" class="search-clear-btn">清空</button>
+        </div>
+        <div class="search-hint">提示：可搜索用户名、用户ID或备注信息（如：包年、临时等）</div>
+        <div id="searchResultInfo" class="search-result-info" style="display: none;"></div>
+      </div>
+      <ul id="list"></ul>
+    </div>
+
+    <div class="admin-footer-actions">
+      <button type="button" class="ghost-button" id="logout">退出管理登录</button>
+    </div>
+  </div>
+
+  <script src="https://fastly.jsdelivr.net/npm/axios@0.26.1/dist/axios.min.js"></script>
+  <script>
+    const listEl = document.getElementById('list');
+    const msg = document.getElementById('msg');
+    const userSearchInput = document.getElementById('userSearchInput');
+    const roleFilterSelect = document.getElementById('roleFilterSelect');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const searchResultInfo = document.getElementById('searchResultInfo');
+    const levelDetailPanel = document.getElementById('levelDetailPanel');
+    const workspaceSummary = document.getElementById('workspaceSummary');
+    const workspaceTabs = Array.from(document.querySelectorAll('.workspace-tab'));
+
+    let allUsersData = [];
+    let currentWorkspace = 'main';
+
+    function currentMainUsers() {
+      return allUsersData.filter(function (u) {
+        return String(u.account_role || 'main').trim().toLowerCase() !== 'secondary';
+      });
+    }
+
+    function currentSecondaryUsers() {
+      return allUsersData.filter(function (u) {
+        return String(u.account_role || 'main').trim().toLowerCase() === 'secondary';
+      });
+    }
+
+    function buildWorkspaceSummary() {
+      const mains = currentMainUsers();
+      const secondaries = currentSecondaryUsers();
+      const boundSecondaries = secondaries.filter(function (u) {
+        return String(u.bound_main_user_id || '').trim();
+      });
+      workspaceSummary.innerHTML = [
+        '<div class="workspace-metric"><div class="workspace-metric__label">主账号总数</div><div class="workspace-metric__value">' + mains.length + '</div></div>',
+        '<div class="workspace-metric"><div class="workspace-metric__label">辅助账号总数</div><div class="workspace-metric__value">' + secondaries.length + '</div></div>',
+        '<div class="workspace-metric"><div class="workspace-metric__label">已绑定辅助账号</div><div class="workspace-metric__value">' + boundSecondaries.length + '</div></div>'
+      ].join('');
+    }
+
+    function updateWorkspaceTabs() {
+      workspaceTabs.forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.dataset.workspace === currentWorkspace);
+      });
+    }
+
+    function getVisibleUsers() {
+      return currentWorkspace === 'secondary' ? currentSecondaryUsers() : currentMainUsers();
+    }
+
+    function getWorkspaceRoleValue() {
+      return currentWorkspace === 'secondary' ? 'secondary' : 'main';
+    }
+
+    function renderBindingOptions(boundMainUserId) {
+      const mains = currentMainUsers();
+      const options = ['<option value="">未绑定</option>'];
+      mains.forEach(function (user) {
+        const nickname = String(user.nickname || '未命名主账号').trim() || '未命名主账号';
+        const neteaseId = String(user.netease_user_id || '').trim();
+        const label = neteaseId ? nickname + ' / ' + neteaseId : nickname;
+        const selected = user.user_id === boundMainUserId ? ' selected' : '';
+        options.push('<option value="' + escAttr(user.user_id) + '"' + selected + '>' + escHtml(label) + '</option>');
+      });
+      return options.join('');
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function hideLevelDetail() {
+      levelDetailPanel.innerHTML = '';
+      levelDetailPanel.style.display = 'none';
+    }
+
+    function fmtPct01(p) {
+      const n = Number(p);
+      if (Number.isNaN(n)) return '—';
+      return (n * 100).toFixed(1) + '%';
+    }
+
+    function buildLevelDetailHtml(resp) {
+      if (resp == null || typeof resp !== 'object') {
+        return '<div class="level-view level-view--err">' + escHtml(String(resp)) + '</div>';
+      }
+      const code = resp.code;
+      if (code !== 200) {
+        const m = resp.message != null ? resp.message : resp.msg != null ? resp.msg : JSON.stringify(resp);
+        return (
+          '<div class="level-view level-view--err"><div class="level-view__title">等级 / 听歌量</div><p>' +
+          escHtml(String(m)) +
+          '</p></div>'
+        );
+      }
+      const s = resp.summary;
+      const d = resp.data && typeof resp.data === 'object' ? resp.data : {};
+      if (!s || typeof s !== 'object') {
+        return (
+          '<div class="level-view"><div class="level-view__title">等级 / 听歌量</div><pre>' +
+          escHtml(JSON.stringify(resp, null, 2)) +
+          '</pre></div>'
+        );
+      }
+
+      const level = s.level != null ? s.level : d.level;
+      const progress = s.progress != null ? s.progress : d.progress;
+      const uid = s.userId != null ? s.userId : d.userId;
+      const infoStr = s.info != null ? String(s.info) : d.info != null ? String(d.info) : '';
+
+      const pw = Math.min(100, Math.max(0, Number(progress) * 100));
+      const parts = [];
+      parts.push('<div class="level-view">');
+      parts.push('<div class="level-view__title">等级 / 听歌量</div>');
+      parts.push('<div class="level-view__level">Lv.' + escHtml(level != null ? String(level) : '—') + '</div>');
+      parts.push('<div class="level-view__bar-track"><div class="level-view__bar-fill" style="width:' + pw + '%"></div></div>');
+      parts.push(
+        '<div class="level-view__progress-caption">距下一级整体进度（接口字段 progress）：<strong>' +
+          escHtml(fmtPct01(progress)) +
+          '</strong></div>'
+      );
+
+      parts.push('<dl class="level-view__grid">');
+      if (uid != null) {
+        parts.push(
+          '<div class="level-view__item"><dt>网易云用户 ID</dt><dd>' + escHtml(String(uid)) + '</dd></div>'
+        );
+      }
+      if (s.plays_current != null && s.plays_target_for_next_level != null) {
+        parts.push(
+          '<div class="level-view__item"><dt>本周期听歌</dt><dd>' +
+            escHtml(String(s.plays_current)) +
+            ' / ' +
+            escHtml(String(s.plays_target_for_next_level)) +
+            ' 首</dd></div>'
+        );
+        const rem = s.plays_remaining_estimate;
+        if (rem != null) {
+          const playHint =
+            Number(rem) <= 0 ? '本周期听歌条件已满足（估算无需再刷）' : '约 ' + String(rem) + ' 首（估算）';
+          parts.push('<div class="level-view__item"><dt>听歌进度</dt><dd>' + escHtml(playHint) + '</dd></div>');
+        }
+      }
+      if (s.login_days_current != null && s.login_days_target_for_next_level != null) {
+        parts.push(
+          '<div class="level-view__item"><dt>累计登录</dt><dd>' +
+            escHtml(String(s.login_days_current)) +
+            ' / ' +
+            escHtml(String(s.login_days_target_for_next_level)) +
+            ' 天</dd></div>'
+        );
+        const lr = s.login_days_remaining_estimate;
+        if (lr != null) {
+          const loginHint =
+            Number(lr) <= 0 ? '累计登录天数已满足升级条件（估算）' : '约 ' + String(lr) + ' 天（估算）';
+          parts.push('<div class="level-view__item"><dt>登录进度</dt><dd>' + escHtml(loginHint) + '</dd></div>');
+        }
+      }
+      parts.push('</dl>');
+
+      if (infoStr) {
+        const items = infoStr.split('$').map(function (x) {
+          return x.trim();
+        }).filter(Boolean);
+        if (items.length) {
+          parts.push('<div class="level-view__section"><h4>当前等级权益</h4><ul class="level-view__benefits">');
+          items.forEach(function (line) {
+            parts.push('<li>' + escHtml(line) + '</li>');
+          });
+          parts.push('</ul></div>');
+        }
+      }
+
+      parts.push(
+        '<details class="level-view__raw"><summary>查看原始 JSON</summary><pre>' +
+          escHtml(JSON.stringify(resp, null, 2)) +
+          '</pre></details>'
+      );
+      parts.push('</div>');
+      return parts.join('');
+    }
+
+    function showLevelDetail(data) {
+      levelDetailPanel.innerHTML = buildLevelDetailHtml(data);
+      levelDetailPanel.style.display = 'block';
+    }
+
+    function setMsg(text, isError, options) {
+      if (text) hideLevelDetail();
+      const useHtml = !!(options && options.html);
+      if (useHtml) {
+        msg.innerHTML = text || '';
+      } else {
+        msg.textContent = text || '';
+      }
+      msg.classList.toggle('info-message--html', useHtml);
+      msg.classList.toggle('error', !!isError);
+      msg.style.display = text ? 'block' : 'none';
+    }
+
+    function escAttr(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;');
+    }
+
+    function fmtLastLogin(iso) {
+      if (!iso) return '—';
+      try {
+        return new Date(iso).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+      } catch {
+        return String(iso);
+      }
+    }
+
+    async function apiUser(uid, path, opts) {
+      const url = '/api/users/' + encodeURIComponent(uid) + path;
+      const method = ((opts && opts.method) || 'GET').toUpperCase();
+      const skipSessionCheck = !!(opts && opts.skipSessionCheck);
+      try {
+        const cfg = { withCredentials: true, headers: (opts && opts.headers) || {} };
+        if (!skipSessionCheck && path !== '/check') {
+          const checkRes = await axios.get('/api/users/' + encodeURIComponent(uid) + '/check', cfg);
+          const checkData = checkRes && checkRes.data ? checkRes.data : null;
+          const checkCode = checkData && Number(checkData.code);
+          if (!checkData || checkCode !== 200) {
+            throw new Error((checkData && (checkData.message || checkData.detail)) || '账号会话已失效，请重新登录');
+          }
+        }
+        let res;
+        if (method === 'GET') {
+          res = await axios.get(url, cfg);
+        } else if (method === 'POST') {
+          res = await axios.post(url, opts.body != null ? opts.body : null, cfg);
+        } else {
+          res = await axios(Object.assign({ url, method, withCredentials: true }, opts));
+        }
+        return res.data;
+      } catch (e) {
+        const d = e.response && e.response.data;
+        const text = e.response && typeof e.response.data === 'string' ? e.response.data : '';
+        let err = e.message;
+        if (d && typeof d === 'object') {
+          err = d.detail != null ? d.detail : d.message != null ? d.message : JSON.stringify(d);
+        } else if (text) {
+          err = text;
+        }
+        throw new Error(typeof err === 'string' ? err : JSON.stringify(err));
+      }
+    }
+
+    function parseIdsInput(raw) {
+      if (!raw) return [];
+      return String(raw)
+        .split(/[\s,]+/)
+        .map(function (item) {
+          return item.trim();
+        })
+        .filter(Boolean)
+        .map(function (item) {
+          return Number(item);
+        })
+        .filter(function (item) {
+          return Number.isInteger(item) && item > 0;
+        });
+    }
+
+    function getPlayidsModeLabel(mode) {
+      if (mode === 'playlist') return '歌单 ID';
+      if (mode === 'ids-file') return '歌曲 ID 文件';
+      return '指定歌曲 ID';
+    }
+
+    function parsePlaylistIdInput(rawValue) {
+      const value = String(rawValue || '').trim();
+      if (!value) return 0;
+      if (/^\d+$/.test(value)) {
+        return Math.floor(Number(value) || 0);
+      }
+      const normalizedValue = value.replace(/&amp;/gi, '&');
+      const directMatchers = [
+        /[?#&]id=(\d+)/i,
+        /\/playlist\/(\d+)/i,
+        /\/discover\/toplist\/(\d+)/i,
+        /\/toplist\/(\d+)/i,
+      ];
+
+      for (let i = 0; i < directMatchers.length; i += 1) {
+        const match = normalizedValue.match(directMatchers[i]);
+        if (match && /^\d+$/.test(match[1])) {
+          return Math.floor(Number(match[1]) || 0);
+        }
+      }
+
+      const urlLikeMatch = normalizedValue.match(/https?:\/\/[^\s]+/i);
+      const candidateUrl = urlLikeMatch ? urlLikeMatch[0] : normalizedValue;
+
+      try {
+        const parsedUrl = new URL(candidateUrl);
+        const searchId = String(parsedUrl.searchParams.get('id') || '').trim();
+        if (/^\d+$/.test(searchId)) {
+          return Math.floor(Number(searchId) || 0);
+        }
+
+        const hashValue = String(parsedUrl.hash || '').replace(/^#/, '');
+        if (hashValue) {
+          const hashQueryIndex = hashValue.indexOf('?');
+          if (hashQueryIndex >= 0) {
+            const hashQuery = hashValue.slice(hashQueryIndex + 1);
+            const hashParams = new URLSearchParams(hashQuery);
+            const hashId = String(hashParams.get('id') || '').trim();
+            if (/^\d+$/.test(hashId)) {
+              return Math.floor(Number(hashId) || 0);
+            }
+          }
+          for (let i = 0; i < directMatchers.length; i += 1) {
+            const hashMatch = hashValue.match(directMatchers[i]);
+            if (hashMatch && /^\d+$/.test(hashMatch[1])) {
+              return Math.floor(Number(hashMatch[1]) || 0);
+            }
+          }
+        }
+
+        const pathMatch = parsedUrl.pathname.match(/(?:playlist|discover\/toplist|toplist)\/(\d+)/i);
+        if (pathMatch && /^\d+$/.test(pathMatch[1])) {
+          return Math.floor(Number(pathMatch[1]) || 0);
+        }
+      } catch (error) {
+        return 0;
+      }
+      return 0;
+    }
+
+    function parsePlaylistIdsInput(rawValue) {
+      return String(rawValue || '')
+        .split(/[\r\n,，;；\s]+/)
+        .map(function (item) {
+          return parsePlaylistIdInput(item);
+        })
+        .filter(function (item) {
+          return Number.isInteger(item) && item > 0;
+        })
+        .filter(function (item, index, items) {
+          return items.indexOf(item) === index;
+        });
+    }
+
+    function syncPlayidsForm(form) {
+      const mode = form.querySelector('.js-playids-mode').value;
+      const idsField = form.querySelector('.js-playids-ids-field');
+      const idsFileField = form.querySelector('.js-playids-ids-file-field');
+      const playlistField = form.querySelector('.js-playids-playlist-id-field');
+      const syncRunField = form.querySelector('.js-playids-sync-run-field');
+      const countInput = form.querySelector('.js-playids-count');
+      const runMinInput = form.querySelector('.js-playids-run-min');
+      const runMaxInput = form.querySelector('.js-playids-run-max');
+      const idsInput = form.querySelector('.js-playids-ids');
+
+      idsField.classList.toggle('is-visible', mode === 'ids');
+      idsFileField.classList.toggle('is-visible', mode === 'ids-file');
+      playlistField.classList.toggle('is-visible', mode === 'playlist');
+      if (syncRunField) {
+        syncRunField.classList.toggle('is-visible', mode === 'playlist');
+      }
+
+      if (mode === 'ids') {
+        const ids = parseIdsInput(idsInput.value);
+        if (ids.length) {
+          countInput.value = String(ids.length);
+          runMinInput.value = String(ids.length);
+          runMaxInput.value = String(ids.length);
+        }
+      }
+    }
+
+    function syncMusicianForm(form) {
+      const mode = String(form.querySelector('.js-musician-mode').value || 'musician-sign').trim();
+      const vipFields = form.querySelectorAll('.js-musician-vip-only');
+      const vipPlayField = form.querySelector('.js-musician-enable-vip-play-field');
+      const vipNoteField = form.querySelector('.js-musician-enable-vip-note-field');
+      const submitBtn = form.querySelector('.js-musician-submit');
+      const modeHint = form.querySelector('.js-musician-mode-hint');
+      const vipOnlyVisible = mode === 'musician' || mode === 'musician-vip';
+      const enableVipPlay = vipPlayField ? !!vipPlayField.querySelector('.js-musician-enable-vip-play').checked : false;
+
+      vipFields.forEach(function (field) {
+        field.classList.toggle('is-visible', vipOnlyVisible);
+      });
+
+      if (vipPlayField) {
+        vipPlayField.classList.toggle('is-visible', vipOnlyVisible);
+      }
+      if (vipNoteField) {
+        vipNoteField.classList.toggle('is-visible', vipOnlyVisible && mode !== 'musician-sign');
+      }
+
+      if (submitBtn) {
+        if (mode === 'musician-sign') {
+          submitBtn.textContent = '执行音乐人签到';
+        } else if (mode === 'musician-vip') {
+          submitBtn.textContent = enableVipPlay ? '执行音乐人 VIP 任务' : '执行音乐人 VIP 非播放任务';
+        } else {
+          submitBtn.textContent = '执行完整音乐人任务';
+        }
+      }
+
+      if (modeHint) {
+        if (mode === 'musician-sign') {
+          modeHint.textContent = '当前只执行音乐人日常签到，不会使用下方主歌池、混听和 VIP 进阶参数。';
+        } else if (mode === 'musician-vip') {
+          modeHint.textContent = enableVipPlay
+            ? '当前只执行音乐人 VIP 进阶任务；主账号负责签到/状态处理，播放部分只会由已绑定辅助账号使用下方主歌池参数执行。'
+            : '当前只执行音乐人 VIP 进阶任务，但已关闭 VIP 接力刷歌。';
+        } else {
+          modeHint.textContent = enableVipPlay
+            ? '当前执行完整 musician 流程：主账号先完成日常签到和 VIP 非播放阶段，播放部分只会交给已绑定辅助账号接力执行。'
+            : '当前执行完整 musician 流程：会跑签到和 VIP 流程，但已关闭 VIP 接力刷歌。';
+        }
+      }
+
+      if (vipOnlyVisible) {
+        syncPlayidsForm(form);
+      }
+    }
+
+    function buildPlayidsPayloadFromForm(form) {
+      const mode = form.querySelector('.js-playids-mode').value;
+      const count = Math.max(1, Math.floor(Number(form.querySelector('.js-playids-count').value) || 30));
+      const dailyMin = Math.max(1, Math.floor(Number(form.querySelector('.js-playids-daily-min').value) || 50));
+      const dailyMax = Math.max(1, Math.floor(Number(form.querySelector('.js-playids-daily-max').value) || 200));
+      const runMin = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-run-min').value) || 10));
+      const runMax = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-run-max').value) || 20));
+      const gapMin = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-gap-min').value) || 8));
+      const gapMax = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-gap-max').value) || 15));
+      const mixEnabled = !!form.querySelector('.js-playids-mix-enabled').checked;
+      const mixRatio = Math.max(0, Math.min(1, Number(form.querySelector('.js-playids-mix-ratio').value) || 0));
+      const countTargetForMix = !!form.querySelector('.js-playids-count-target-for-mix').checked;
+      const idsFileValue = String(form.querySelector('.js-playids-ids-file').value || '').trim();
+      const playlistInputValue = String(form.querySelector('.js-playids-playlist-id').value || '').trim();
+      const playlistIdsValue = parsePlaylistIdsInput(playlistInputValue);
+
+      if (dailyMax < dailyMin) {
+        throw new Error('daily_max 不能小于 daily_min');
+      }
+      if (runMax < runMin) {
+        throw new Error('run_max 不能小于 run_min');
+      }
+      if (gapMax < gapMin) {
+        throw new Error('gap_max 不能小于 gap_min');
+      }
+
+      const payload = {
+        count: count,
+        daily_min: dailyMin,
+        daily_max: dailyMax,
+        run_min: runMin,
+        run_max: runMax,
+        gap_min: gapMin,
+        gap_max: gapMax,
+        mix_enabled: mixEnabled,
+        mix_ratio: mixRatio,
+        count_target_for_mix: countTargetForMix,
+      };
+
+      if (mode === 'ids') {
+        const ids = parseIdsInput(form.querySelector('.js-playids-ids').value);
+        if (!ids.length) {
+          throw new Error('至少需要一个有效歌曲 ID');
+        }
+        payload.ids = ids;
+        payload.count = ids.length;
+        payload.run_min = ids.length;
+        payload.run_max = ids.length;
+      } else if (mode === 'playlist') {
+        if (!playlistIdsValue.length) {
+          throw new Error('请至少提供一个有效的歌单 ID 或网易云歌单链接');
+        }
+        payload.playlist_id = playlistIdsValue[0];
+        payload.playlist_ids = playlistIdsValue;
+      } else {
+        if (!idsFileValue) {
+          throw new Error('请提供 ids_file');
+        }
+      }
+
+      if (idsFileValue) {
+        payload.ids_file = idsFileValue;
+      }
+
+      return payload;
+    }
+
+    function buildMusicianPayloadFromForm(form) {
+      const mode = String(form.querySelector('.js-musician-mode').value || 'musician-sign').trim();
+      const enableVipPlay = !!form.querySelector('.js-musician-enable-vip-play').checked;
+      const enableVipNote = !!form.querySelector('.js-musician-enable-vip-note').checked;
+      const sourceMode = String((form.querySelector('.js-playids-mode') || {}).value || 'ids').trim();
+      const payload = {
+        mode: mode,
+        enable_vip_play: enableVipPlay,
+        enable_vip_note: enableVipNote,
+      };
+
+      if (mode === 'musician' || mode === 'musician-vip') {
+        const ids = parseIdsInput(form.querySelector('.js-playids-ids').value);
+        const idsFileValue = String(form.querySelector('.js-playids-ids-file').value || '').trim();
+        const playlistInputValue = String(form.querySelector('.js-playids-playlist-id').value || '').trim();
+        const playlistIdsValue = parsePlaylistIdsInput(playlistInputValue);
+        const dailyMin = Math.max(1, Math.floor(Number(form.querySelector('.js-playids-daily-min').value) || 50));
+        const dailyMax = Math.max(1, Math.floor(Number(form.querySelector('.js-playids-daily-max').value) || 200));
+        const runMin = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-run-min').value) || 0));
+        const runMax = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-run-max').value) || 0));
+        const gapMin = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-gap-min').value) || 8));
+        const gapMax = Math.max(0, Math.floor(Number(form.querySelector('.js-playids-gap-max').value) || 15));
+        const mixEnabled = !!form.querySelector('.js-playids-mix-enabled').checked;
+        const mixRatio = Math.max(0, Math.min(1, Number(form.querySelector('.js-playids-mix-ratio').value) || 0));
+        const countTargetForMix = !!form.querySelector('.js-playids-count-target-for-mix').checked;
+
+        if (dailyMax < dailyMin) {
+          throw new Error('daily_max 不能小于 daily_min');
+        }
+        if (runMax < runMin) {
+          throw new Error('run_max 不能小于 run_min');
+        }
+        if (gapMax < gapMin) {
+          throw new Error('gap_max 不能小于 gap_min');
+        }
+        if (enableVipPlay) {
+          if (sourceMode === 'ids' && !ids.length) {
+            throw new Error('启用 VIP 接力刷歌时，至少需要一个有效歌曲 ID');
+          }
+          if (sourceMode === 'ids-file' && !idsFileValue) {
+            throw new Error('启用 VIP 接力刷歌时，请提供 ids_file');
+          }
+          if (sourceMode === 'playlist' && !playlistIdsValue.length) {
+            throw new Error('启用 VIP 接力刷歌时，请至少提供一个有效的歌单 ID 或网易云歌单链接');
+          }
+        }
+
+        payload.playids_options = {
+          count: ids.length || 1,
+          daily_min: dailyMin,
+          daily_max: dailyMax,
+          run_min: runMin,
+          run_max: runMax,
+          gap_min: gapMin,
+          gap_max: gapMax,
+          mix_enabled: mixEnabled,
+          mix_ratio: mixRatio,
+          count_target_for_mix: countTargetForMix,
+        };
+
+        if (sourceMode === 'ids' && ids.length) {
+          payload.playids_options.ids = ids;
+          payload.playids_options.count = ids.length;
+        }
+        if (sourceMode === 'ids-file' && idsFileValue) {
+          payload.playids_options.ids_file = idsFileValue;
+        }
+        if (sourceMode === 'playlist' && playlistIdsValue.length) {
+          payload.playids_options.playlist_id = playlistIdsValue[0];
+          payload.playids_options.playlist_ids = playlistIdsValue;
+        }
+      }
+
+      return payload;
+    }
+
+    function buildNcmmTaskPlayidsPayloadFromForm(form) {
+      const ids = parseIdsInput(form.querySelector('.js-ncmm-task-playids-ids').value);
+      const idsFileValue = String(form.querySelector('.js-ncmm-task-playids-ids-file').value || '').trim();
+      const runMin = Math.max(0, Math.floor(Number(form.querySelector('.js-ncmm-task-playids-run-min').value) || 0));
+      const runMax = Math.max(0, Math.floor(Number(form.querySelector('.js-ncmm-task-playids-run-max').value) || 0));
+      const gapMin = Math.max(0, Math.floor(Number(form.querySelector('.js-ncmm-task-playids-gap-min').value) || 8));
+      const gapMax = Math.max(0, Math.floor(Number(form.querySelector('.js-ncmm-task-playids-gap-max').value) || 15));
+      const mixEnabled = !!form.querySelector('.js-ncmm-task-playids-mix-enabled').checked;
+      const mixRatio = Math.max(0, Math.min(1, Number(form.querySelector('.js-ncmm-task-playids-mix-ratio').value) || 0));
+      const countTargetForMix = !!form.querySelector('.js-ncmm-task-playids-count-target-for-mix').checked;
+
+      if (runMax < runMin) {
+        throw new Error('run_max 不能小于 run_min');
+      }
+      if (gapMax < gapMin) {
+        throw new Error('gap_max 不能小于 gap_min');
+      }
+      if (!ids.length && !idsFileValue) {
+        throw new Error('勾选 playids 时，至少需要填写歌曲 IDs 或 ids_file');
+      }
+
+      const payload = {
+        count: ids.length || 1,
+        run_min: runMin,
+        run_max: runMax,
+        gap_min: gapMin,
+        gap_max: gapMax,
+        mix_enabled: mixEnabled,
+        mix_ratio: mixRatio,
+        count_target_for_mix: countTargetForMix,
+      };
+
+      if (ids.length) {
+        payload.ids = ids;
+        payload.count = ids.length;
+      }
+      if (idsFileValue) {
+        payload.ids_file = idsFileValue;
+      }
+
+      return payload;
+    }
+
+    function togglePlayidsPanel(li, forceOpen) {
+      const panel = li.querySelector('.js-playids-panel');
+      if (!panel) return;
+      const nextOpen = forceOpen == null ? !panel.classList.contains('is-open') : !!forceOpen;
+      panel.classList.toggle('is-open', nextOpen);
+      if (nextOpen) {
+        syncPlayidsForm(panel.querySelector('.js-playids-form'));
+      }
+    }
+
+    function summarizePlayidsResult(resp) {
+      if (resp == null || typeof resp !== 'object') {
+        return String(resp);
+      }
+      const lines = [];
+      lines.push('刷歌任务已完成');
+      if (resp.status) lines.push('状态: ' + String(resp.status));
+      if (resp.mode) lines.push('来源: ' + String(resp.mode));
+      if (resp.source_playlist_name) {
+        lines.push('歌单名称: ' + String(resp.source_playlist_name));
+      }
+      if (resp.source_playlist_id != null) {
+        lines.push('歌单 ID: ' + String(resp.source_playlist_id));
+      }
+      if (Array.isArray(resp.source_playlist_ids) && resp.source_playlist_ids.length > 1) {
+        lines.push('歌单数量: ' + String(resp.source_playlist_ids.length));
+      }
+      if (Array.isArray(resp.source_playlists) && resp.source_playlists.length) {
+        const playlistSummary = resp.source_playlists
+          .map(function (item) {
+            if (!item || typeof item !== 'object') return '';
+            const playlistName = String(item.playlist_name || '').trim();
+            const playlistId = String(item.playlist_id || '').trim();
+            const songCount = Math.floor(Number(item.song_count) || 0);
+            const label = playlistName || playlistId;
+            if (!label) return '';
+            return songCount > 0 ? label + '（' + songCount + ' 首）' : label;
+          })
+          .filter(Boolean);
+        if (playlistSummary.length) {
+          lines.push('歌单明细: ' + playlistSummary.join('；'));
+        }
+      }
+      if (resp.resolved_song_count != null) {
+        lines.push('解析歌曲数: ' + String(resp.resolved_song_count));
+      }
+      if (resp.daily_completed != null && resp.daily_target != null) {
+        lines.push('今日进度: ' + String(resp.daily_completed) + ' / ' + String(resp.daily_target));
+      }
+      if (resp.run_target != null) {
+        lines.push('本次目标: ' + String(resp.run_target));
+      }
+      if (resp.completed != null) {
+        lines.push('本次完成: ' + String(resp.completed));
+      }
+      if (resp.played_song_ids && Array.isArray(resp.played_song_ids) && resp.played_song_ids.length) {
+        lines.push('本次歌曲数: ' + String(resp.played_song_ids.length));
+      }
+      return lines.join('\n');
+    }
+
+    function syncResolvedPlaylistCount(form, resp) {
+      if (!form || resp == null || typeof resp !== 'object') {
+        return;
+      }
+      const mode = String(form.querySelector('.js-playids-mode').value || '').trim();
+      if (mode !== 'playlist') {
+        return;
+      }
+      const resolvedSongCount = Math.floor(Number(resp.resolved_song_count) || 0);
+      if (resolvedSongCount <= 0) {
+        return;
+      }
+      const countInput = form.querySelector('.js-playids-count');
+      if (countInput) {
+        countInput.value = String(resolvedSongCount);
+      }
+      const syncRunCheckbox = form.querySelector('.js-playids-sync-run-to-resolved');
+      if (!syncRunCheckbox || !syncRunCheckbox.checked) {
+        return;
+      }
+      const runMinInput = form.querySelector('.js-playids-run-min');
+      const runMaxInput = form.querySelector('.js-playids-run-max');
+      if (runMinInput) {
+        runMinInput.value = String(resolvedSongCount);
+      }
+      if (runMaxInput) {
+        runMaxInput.value = String(resolvedSongCount);
+      }
+    }
+
+    function summarizeNcmmCommandResult(resp, command) {
+      if (resp == null || typeof resp !== 'object') {
+        return String(resp);
+      }
+      const lines = [];
+      lines.push('ncmm 命令已执行');
+      lines.push('命令: ' + String(command || resp.mode || 'unknown'));
+      const primaryUser = resp.primary_user && typeof resp.primary_user === 'object' ? resp.primary_user : null;
+      if (primaryUser) {
+        const primaryName = String(primaryUser.nickname || primaryUser.netease_user_id || primaryUser.user_id || '主账号');
+        lines.push('主执行账号: ' + primaryName);
+      }
+      if (resp.status) lines.push('状态: ' + String(resp.status));
+      const output = [resp.stdout, resp.stderr]
+        .map(function (part) { return String(part || '').trim(); })
+        .filter(Boolean)
+        .join('\n');
+      if (output) {
+        const picked = output
+          .split(/\r?\n/)
+          .map(function (line) { return line.trim(); })
+          .filter(Boolean)
+          .map(function (line) {
+            return line
+              .replace(/^\[[^\]]+\]\s*/, '')
+              .replace(/^[✅❌👉]\s*/, '')
+              .trim();
+          })
+          .filter(Boolean);
+        const summaryLines = picked.slice(-4);
+        if (summaryLines.length) {
+          lines.push('业务结果:');
+          summaryLines.forEach(function (line) {
+            lines.push('- ' + line);
+          });
+        }
+      }
+      const secondaryResults = Array.isArray(resp.secondary_results) ? resp.secondary_results : [];
+      if (secondaryResults.length) {
+        const secondarySuccessCount = secondaryResults.filter(function (item) { return !!item.ok; }).length;
+        lines.push('辅助账号联动: ' + secondarySuccessCount + ' / ' + secondaryResults.length + ' 成功');
+        secondaryResults.forEach(function (item) {
+          const target = item && item.target && typeof item.target === 'object' ? item.target : {};
+          const targetLabel = String(target.nickname || target.netease_user_id || target.user_id || '辅助账号');
+          if (item && item.ok) {
+            lines.push('- ' + targetLabel + ': 成功');
+          } else {
+            const err = item && item.error ? String(item.error) : '未知错误';
+            lines.push('- ' + targetLabel + ': 失败 - ' + err);
+          }
+        });
+      }
+      return lines.join('\n');
+    }
+
+    function summarizeMusicianResult(resp, mode) {
+      if (resp == null || typeof resp !== 'object') {
+        return { text: String(resp), html: false };
+      }
+      const lines = [];
+      lines.push('音乐人任务已执行');
+      lines.push('模式: ' + String(mode || resp.mode || 'musician'));
+      const playlistInfoParts = [];
+      if (resp.source_playlist_name) {
+        playlistInfoParts.push('首个歌单: ' + String(resp.source_playlist_name));
+      } else if (resp.source_playlist_id != null) {
+        playlistInfoParts.push('首个歌单 ID: ' + String(resp.source_playlist_id));
+      }
+      if (Array.isArray(resp.source_playlist_ids) && resp.source_playlist_ids.length > 1) {
+        playlistInfoParts.push('共 ' + String(resp.source_playlist_ids.length) + ' 个歌单');
+      }
+      if (resp.resolved_song_count != null) {
+        playlistInfoParts.push('解析 ' + String(resp.resolved_song_count) + ' 首');
+      }
+      if (playlistInfoParts.length) {
+        lines.push('歌单摘要: ' + playlistInfoParts.join('，'));
+      }
+      if (Array.isArray(resp.source_playlists) && resp.source_playlists.length) {
+        const playlistSummary = resp.source_playlists
+          .map(function (item) {
+            const name = String(item && item.playlist_name ? item.playlist_name : item && item.playlist_id != null ? item.playlist_id : '未知歌单');
+            const songCount = item && item.song_count != null ? String(item.song_count) : '0';
+            return name + '（' + songCount + ' 首）';
+          })
+          .slice(0, 3);
+        const hiddenCount = Math.max(0, resp.source_playlists.length - playlistSummary.length);
+        let playlistLine = playlistSummary.join('；');
+        if (hiddenCount > 0) {
+          playlistLine += '；其余 ' + String(hiddenCount) + ' 个已省略';
+        }
+        lines.push('歌单明细: ' + playlistLine);
+      }
+      const primaryUser = resp.primary_user && typeof resp.primary_user === 'object' ? resp.primary_user : null;
+      if (primaryUser) {
+        const primaryName = String(primaryUser.nickname || primaryUser.netease_user_id || primaryUser.user_id || '主账号');
+        lines.push('主执行账号: ' + primaryName);
+      }
+      if (resp.status) lines.push('状态: ' + String(resp.status));
+      const output = [resp.stdout, resp.stderr]
+        .map(function (part) { return String(part || '').trim(); })
+        .filter(Boolean)
+        .join('\n');
+      if (output) {
+        const picked = output
+          .split(/\r?\n/)
+          .map(function (line) { return line.trim(); })
+          .filter(Boolean)
+          .map(function (line) {
+            return line
+              .replace(/^\[[^\]]+\]\s*/, '')
+              .replace(/^[✅❌👉]\s*/, '')
+              .trim();
+          })
+          .filter(Boolean);
+        const preferred = picked.filter(function (line) {
+          return /不是音乐人|失败|成功|完成|跳过|已签到|无会员权益|权益/.test(line);
+        });
+        const summaryLines = (preferred.length ? preferred : picked).slice(-4);
+        if (summaryLines.length) {
+          lines.push('业务结果:');
+          summaryLines.forEach(function (line) {
+            lines.push('- ' + line);
+          });
+        }
+      }
+      const secondaryResults = Array.isArray(resp.secondary_results) ? resp.secondary_results : [];
+      if (secondaryResults.length) {
+        const secondarySuccessCount = secondaryResults.filter(function (item) { return !!item.ok; }).length;
+        lines.push('辅助账号联动: ' + secondarySuccessCount + ' / ' + secondaryResults.length + ' 成功');
+        secondaryResults.forEach(function (item) {
+          const target = item && item.target && typeof item.target === 'object' ? item.target : {};
+          const targetLabel = String(target.nickname || target.netease_user_id || target.user_id || '辅助账号');
+          if (item && item.ok) {
+            lines.push('- ' + targetLabel + ': 成功');
+          } else {
+            const err = item && item.error ? String(item.error) : '未知错误';
+            lines.push('- ' + targetLabel + ': 失败 - ' + err);
+          }
+        });
+      }
+
+      const detailItems = [];
+      if (Array.isArray(resp.source_playlists) && resp.source_playlists.length) {
+        resp.source_playlists.forEach(function (item) {
+          const name = escHtml(String(item && item.playlist_name ? item.playlist_name : item && item.playlist_id != null ? item.playlist_id : '未知歌单'));
+          const songCount = escHtml(String(item && item.song_count != null ? item.song_count : '0'));
+          detailItems.push('<li>' + name + '（' + songCount + ' 首）</li>');
+        });
+      }
+
+      if (!detailItems.length) {
+        return { text: lines.join('\n'), html: false };
+      }
+
+      const summaryText = lines.map(function (line) {
+        return '<div>' + escHtml(line) + '</div>';
+      }).join('');
+      const html = [
+        '<div class="info-message__title">音乐人任务已执行</div>',
+        '<div class="info-message__summary">',
+        summaryText,
+        '</div>',
+        '<details class="info-message__details">',
+        '<summary>展开查看歌单明细（' + escHtml(String(detailItems.length)) + ' 个）</summary>',
+        '<ul>',
+        detailItems.join(''),
+        '</ul>',
+        '</details>'
+      ].join('');
+      return { text: lines.join('\n'), html: html };
+    }
+
+    function closeOperationPanels(li, exceptSelector) {
+      [
+        '.js-playids-panel',
+        '.js-ncmm-command-panel',
+        '.js-musician-panel'
+      ].forEach(function (selector) {
+        if (exceptSelector && selector === exceptSelector) return;
+        const panel = li.querySelector(selector);
+        if (panel) {
+          panel.classList.remove('is-open');
+        }
+      });
+    }
+
+    function filterUsers(keyword) {
+      const lowerKeyword = (keyword || '').toLowerCase().trim();
+      const selectedRole = roleFilterSelect.value === 'all' ? getWorkspaceRoleValue() : (roleFilterSelect.value || getWorkspaceRoleValue());
+      const workspaceUsers = getVisibleUsers();
+      if (!lowerKeyword && selectedRole === 'all') {
+        render(workspaceUsers);
+        searchResultInfo.style.display = 'none';
+        return;
+      }
+      const filtered = workspaceUsers.filter((u) => {
+        const roleValue = String(u.account_role || 'main').trim().toLowerCase() === 'secondary' ? 'secondary' : 'main';
+        const roleMatch = selectedRole === 'all' || roleValue === selectedRole;
+        const nickname = (u.nickname || '').toLowerCase();
+        const neteaseId = (u.netease_user_id != null ? String(u.netease_user_id) : '').toLowerCase();
+        const localId = (u.user_id || '').toLowerCase();
+        const remark = (u.remark || '').toLowerCase();
+        const boundMainNickname = (u.bound_main_nickname || '').toLowerCase();
+        return (
+          roleMatch &&
+          (!lowerKeyword ||
+          nickname.includes(lowerKeyword) ||
+          neteaseId.includes(lowerKeyword) ||
+          localId.includes(lowerKeyword) ||
+          remark.includes(lowerKeyword) ||
+          boundMainNickname.includes(lowerKeyword))
+        );
+      });
+      render(filtered);
+      if (filtered.length === 0) {
+        searchResultInfo.textContent = '未找到匹配的用户';
+        searchResultInfo.style.color = '#dc3545';
+      } else {
+        searchResultInfo.textContent = `找到 ${filtered.length} 个用户（当前工作区共 ${workspaceUsers.length} 个）`;
+        searchResultInfo.style.color = 'var(--primary-color)';
+      }
+      searchResultInfo.style.display = 'block';
+    }
+
+    function render(users) {
+      listEl.innerHTML = '';
+      if (!users.length) {
+        if (allUsersData.length) {
+          const emptyLi = document.createElement('li');
+          emptyLi.className = 'search-empty';
+          emptyLi.textContent = '暂无匹配的用户。';
+          listEl.appendChild(emptyLi);
+        }
+        return;
+      }
+      users.forEach((u) => {
+        const li = document.createElement('li');
+        li.dataset.userId = u.user_id;
+        li.dataset.role = String(u.account_role || 'main').trim().toLowerCase();
+        const accountRole = String(u.account_role || 'main').trim().toLowerCase() === 'secondary' ? '辅助账号' : '主账号';
+        const isSecondary = li.dataset.role === 'secondary';
+        const rawRemark = (u.remark && String(u.remark).trim()) ? String(u.remark) : '';
+        const hasRemark = !!rawRemark;
+        const boundMainText = isSecondary
+          ? ((u.bound_main_nickname && String(u.bound_main_nickname).trim()) || (u.bound_main_user_id && String(u.bound_main_user_id).trim()) || '未绑定主账号')
+          : ('已绑定辅助账号 ' + String(u.bound_secondary_count || 0) + ' 个');
+        const opsTitle = isSecondary ? '账号池管理' : '操作';
+        const actionButtonsHtml = isSecondary
+          ? ''
+          : (
+            '<div class="button-group">' +
+            '<button type="button" class="btn-op-level" data-action="level">等级 / 听歌量</button>' +
+            '<button type="button" class="btn-op-sign" data-action="sign-test">普通签到</button>' +
+            '<button type="button" class="btn-op-playids" data-action="playids">刷歌</button>' +
+            '<button type="button" class="btn-op-ncmm-task" data-action="ncmm-command">ncmm 命令</button>' +
+            '<button type="button" class="btn-op-musician" data-action="musician">音乐人任务</button>' +
+            '</div>'
+          );
+        const operationPanelsHtml = isSecondary
+          ? ''
+          : (
+            '<div class="playids-panel js-playids-panel">' +
+            '<div class="playids-panel__title">单账号刷歌参数</div>' +
+            '<form class="ops-form js-playids-form">' +
+            '<div class="playids-grid">' +
+            '<div class="playids-field"><label>来源模式</label><select class="js-playids-mode"><option value="ids">指定歌曲 ID</option><option value="ids-file">歌曲 ID 文件</option><option value="playlist">歌单 ID</option></select><small>支持三种来源：直接填歌曲 ID、读取 ids_file，或输入网易云歌单 ID / 歌单链接 由后端自动展开歌曲列表。</small></div>' +
+            '<div class="playids-field"><label>count（候选歌曲数）</label><input type="number" class="js-playids-count" min="1" value="30" /><small>显式 ids 模式下会自动对齐到歌曲数；ids_file 模式下用于传递给 ncmm 作为候选规模参数。</small></div>' +
+            '<div class="playids-field"><label>daily_min（当日最少目标）</label><input type="number" class="js-playids-daily-min" min="1" value="50" /><small>当天随机目标的最小值；如果低于 run_min，实际执行仍会被当天目标截断。</small></div>' +
+            '<div class="playids-field"><label>daily_max（当日最多目标）</label><input type="number" class="js-playids-daily-max" min="1" value="200" /><small>当天随机目标的最大值。想单次稳定跑 300，这里也必须至少到 300。</small></div>' +
+            '<div class="playids-field"><label>run_min（本次最少执行首数）</label><input type="number" class="js-playids-run-min" min="0" value="10" /><small>本次运行最少要完成的首数。填 0 时更接近按当天剩余额度跑。</small></div>' +
+            '<div class="playids-field"><label>run_max（本次最多执行首数）</label><input type="number" class="js-playids-run-max" min="0" value="20" /><small>本次运行最多完成的首数。系统会在 run_min 到 run_max 之间取值。</small></div>' +
+            '<div class="playids-field"><label>gap_min（最短间隔秒数）</label><input type="number" class="js-playids-gap-min" min="0" value="8" /><small>两首歌之间最短等待秒数。</small></div>' +
+            '<div class="playids-field"><label>gap_max（最长间隔秒数）</label><input type="number" class="js-playids-gap-max" min="0" value="15" /><small>两首歌之间最长等待秒数。应大于等于 gap_min。</small></div>' +
+            '<div class="playids-field"><label>mix_ratio（混听比例）</label><input type="number" class="js-playids-mix-ratio" min="0" max="1" step="0.05" value="0.3" /><small>混入日推的比例，0 表示不混，0.3 表示大约三成混听。</small></div>' +
+            '<div class="playids-field playids-source-only playids-field--full js-playids-ids-field"><label>歌曲 IDs</label><textarea class="js-playids-ids" placeholder="支持逗号、空格或换行分隔"></textarea><small>当来源模式选择“指定歌曲 ID”时填写。支持逗号、空格、换行混合分隔。</small></div>' +
+            '<div class="playids-field playids-source-only playids-field--full js-playids-ids-file-field"><label>ids_file（歌曲 ID 文件）</label><input type="text" class="js-playids-ids-file" placeholder="本地文件路径或 http/https URL" /><small>当来源模式选择“歌曲 ID 文件”时填写。支持本地 txt 路径、远程文本链接，批量配置也支持多源数组。</small></div>' +
+            '<div class="playids-field playids-source-only playids-field--full js-playids-playlist-id-field"><label>playlist_id（网易云歌单 ID 或链接）</label><textarea class="js-playids-playlist-id" placeholder="每行一个歌单 ID 或链接，例如：&#10;123456789&#10;https://music.163.com/playlist?id=234567890"></textarea><small>当来源模式选择“歌单 ID”时填写。支持一次输入多个歌单 ID / 链接；前端会自动提取 playlist_id，后端会逐个解析后合并歌曲并去重。</small></div>' +
+            '<div class="playids-field"><label><input type="checkbox" class="js-playids-mix-enabled" /> 混入日推</label><small>开启后会在主候选歌曲之间插入部分每日推荐歌曲，用来降低行为单一度。</small></div>' +
+            '<div class="playids-field"><label><input type="checkbox" class="js-playids-count-target-for-mix" /> 混听歌曲计入目标</label><small>勾选后，混入的日推歌曲也算进本次完成首数；不勾选则只算主候选歌曲。</small></div>' +
+            '<div class="playids-field playids-source-only js-playids-sync-run-field"><label><input type="checkbox" class="js-playids-sync-run-to-resolved" /> 解析后自动把 run_min / run_max 对齐为总歌曲数</label><small>适合你想一轮跑完整个合并歌池时使用。不勾选时，只自动回填 count。</small></div>' +
+            '</div>' +
+            '<div class="playids-help">当前后端已完全收口到 ncmm-main。单账号刷歌支持三种显式歌曲池来源：指定歌曲 ID、通过 ids_file 从文本文件 / URL 读取，或直接输入一个或多个网易云歌单 ID / 歌单链接 由后端自动提取歌曲列表并合并去重。指定歌曲 ID 时会自动按你填入的歌曲数量覆盖 count/run_min/run_max。</div>' +
+            '<div class="playids-inline-actions">' +
+            '<button type="submit" class="btn-op-playids js-playids-submit">开始刷歌</button>' +
+            '<button type="button" class="ghost-button js-playids-cancel">收起</button>' +
+            '</div>' +
+            '</form>' +
+            '</div>' +
+            '<div class="ncmm-panel js-ncmm-command-panel">' +
+            '<div class="ncmm-panel__title">ncmm 直连命令</div>' +
+            '<div class="ops-form">' +
+            '<div class="ncmm-checklist">' +
+            '<div class="ncmm-checkitem"><span><strong>签到</strong><br><small>直接执行 ncmm sign，不再通过 task 编排。</small></span></div>' +
+            '<div class="ncmm-checkitem"><span><strong>发动态</strong><br><small>直接执行 ncmm note，使用桥接层默认文案。</small></span></div>' +
+            '<div class="ncmm-checkitem"><span><strong>乐迷团任务</strong><br><small>直接执行 ncmm fansgroup。</small></span></div>' +
+            '</div>' +
+            '<div class="ncmm-help">这里不再调用 <code>ncmm task</code>。刷歌请用上面的“刷歌”，音乐人签到 / VIP 请用“音乐人任务”，这里只保留 sign、note、fansgroup 的独立直连入口。</div>' +
+            '<div class="ncmm-inline-actions">' +
+            '<button type="button" class="btn-op-ncmm-task js-ncmm-command-run" data-command="sign">执行签到</button>' +
+            '<button type="button" class="btn-op-ncmm-task js-ncmm-command-run" data-command="note">执行发动态</button>' +
+            '<button type="button" class="btn-op-ncmm-task js-ncmm-command-run" data-command="fansgroup">执行乐迷团任务</button>' +
+            '<button type="button" class="ghost-button js-ncmm-command-cancel">收起</button>' +
+            '</div>' +
+            '<div class="ncmm-result-hint">主账号执行时会沿用现有绑定关系，自动带出已绑定的辅助账号逐个执行同一条直连命令。</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="ncmm-panel ncmm-panel--musician js-musician-panel">' +
+            '<div class="ncmm-panel__title">音乐人命令</div>' +
+            '<form class="ops-form js-musician-form">' +
+            '<div class="ncmm-grid">' +
+            '<div class="ncmm-field"><label>执行模式</label><select class="js-musician-mode"><option value="musician-sign">musician-sign</option><option value="musician-vip">musician-vip</option><option value="musician">musician</option></select><small class="js-musician-mode-hint">当前只执行音乐人日常签到，不会使用下方主歌池、混听和 VIP 进阶参数。</small></div>' +
+            '<div class="ncmm-field js-musician-enable-vip-play-field"><label><input type="checkbox" class="js-musician-enable-vip-play" checked /> 启用 VIP 接力刷歌</label><small>勾选后会按下方主歌池与混听参数桥接到 musician-vip。</small></div>' +
+            '<div class="ncmm-field js-musician-enable-vip-note-field"><label><input type="checkbox" class="js-musician-enable-vip-note" /> 启用 VIP 图文笔记</label><small>默认关闭，避免在音乐人月度任务里自动发动态。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>mix_ratio（混听比例）</label><input type="number" class="js-playids-mix-ratio" min="0" max="1" step="0.05" value="0.3" /><small>混入日推的比例，0 表示不混，0.3 表示大约三成混听。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>主歌来源</label><select class="js-playids-mode"><option value="ids">指定歌曲 ID</option><option value="ids-file">歌曲 ID 文件</option><option value="playlist">网易云歌单 ID 或链接</option></select><small>选择 musician-vip 使用哪种主歌池来源。</small></div>' +
+            '<div class="playids-field playids-field--full js-playids-ids-field js-musician-vip-only"><label>主歌 IDs</label><textarea class="js-playids-ids" placeholder="支持逗号、空格或换行分隔"></textarea><small>用于 musician-vip 的主歌池；辅助账号会播放这里的歌曲并按配置混入自己的日推。</small></div>' +
+            '<div class="playids-field playids-field--full js-playids-ids-file-field js-musician-vip-only"><label>ids_file（歌曲 ID 文件）</label><input type="text" class="js-playids-ids-file" placeholder="本地文件路径或 http/https URL" /><small>可选：用文本文件或远程链接维护主歌池。</small></div>' +
+            '<div class="playids-field playids-field--full js-playids-playlist-id-field js-musician-vip-only"><label>网易云歌单 ID 或链接</label><textarea class="js-playids-playlist-id" placeholder="支持单个或多个歌单 ID / 链接，逗号、空格、换行都可以"></textarea><small>会先解析歌单里的歌曲，再作为 musician-vip 的主歌池；多个歌单会自动合并去重。</small></div>' +
+            '<div class="playids-field js-playids-sync-run-field js-musician-vip-only"><label><input type="checkbox" class="js-playids-sync-run-to-resolved" /> 解析后自动把 run_min / run_max 对齐为总歌曲数</label><small>适合你想一轮跑完整个主歌池时使用。音乐人面板没有 count 字段，所以这里只同步 run_min / run_max。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>daily_min（当日最少目标）</label><input type="number" class="js-playids-daily-min" min="1" value="50" /><small>musician-vip 播放阶段沿用 playids 的日目标控制；如果这里小于 run_min，实际执行仍会被当天目标截断。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>daily_max（当日最多目标）</label><input type="number" class="js-playids-daily-max" min="1" value="200" /><small>想让单次 musician-vip 稳定跑到 300，这里也必须至少设到 300。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>run_min（最少执行首数）</label><input type="number" class="js-playids-run-min" min="0" value="0" /><small>本次 musician-vip 最少要完成的主歌首数。0 表示更接近按缺口自动分配。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>run_max（最多执行首数）</label><input type="number" class="js-playids-run-max" min="0" value="0" /><small>本次 musician-vip 最多完成的主歌首数。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>gap_min（最短间隔秒数）</label><input type="number" class="js-playids-gap-min" min="0" value="8" /><small>两首歌之间最短等待秒数。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label>gap_max（最长间隔秒数）</label><input type="number" class="js-playids-gap-max" min="0" value="15" /><small>两首歌之间最长等待秒数。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label><input type="checkbox" class="js-playids-mix-enabled" checked /> 混入日推</label><small>开启后辅助账号不会只播主歌池，会按比例混入自己的日推歌曲。</small></div>' +
+            '<div class="playids-field js-musician-vip-only"><label><input type="checkbox" class="js-playids-count-target-for-mix" /> 混听歌曲计入目标</label><small>默认不计入，只把日推当作行为干扰。</small></div>' +
+            '</div>' +
+            '<div class="ncmm-help">这里直接桥接到 <code>ncmm-main</code> 的音乐人命令。如果当前账号不是音乐人，接口会返回业务错误，不会强行吞掉。</div>' +
+            '<div class="ncmm-inline-actions">' +
+            '<button type="submit" class="btn-op-musician js-musician-submit">执行音乐人任务</button>' +
+            '<button type="button" class="ghost-button js-musician-cancel">收起</button>' +
+            '</div>' +
+            '</form>' +
+            '</div>'
+          );
+        const remarkSpanHtml = hasRemark
+          ? '<span class="remark-text">' + escHtml(rawRemark) + '</span>'
+          : '<span class="remark-text" style="color:#999;font-style:italic">（未填写）</span>';
+        li.innerHTML =
+          '<div class="user-info">' +
+          '<div><strong>账号角色:</strong> ' + escHtml(accountRole) + '</div>' +
+          '<div><strong>' + (isSecondary ? '绑定主账号' : '辅助账号池') + ':</strong> <span class="main-badge">' + escHtml(boundMainText) + '</span></div>' +
+          '<div><strong>昵称:</strong> ' + escHtml(u.nickname || '—') + '</div>' +
+          '<div><strong>用户ID:</strong> ' + escHtml((u.netease_user_id && String(u.netease_user_id).trim()) || '—') + '</div>' +
+          '<div class="remark-line"><strong>备注:</strong> ' + remarkSpanHtml +
+          '<button type="button" class="btn-remark remark-edit-btn js-edit-remark" data-remark="' +
+          escAttr(rawRemark) +
+          '">' +
+          (hasRemark ? '编辑' : '添加备注') +
+          '</button></div>' +
+          '<div><strong>最后登录:</strong> ' + escHtml(fmtLastLogin(u.last_login)) + '</div>' +
+          '</div>' +
+          '<div class="ops">' +
+          '<div class="ops-title">' + opsTitle + '</div>' +
+          actionButtonsHtml +
+          operationPanelsHtml +
+          (isSecondary
+            ? '<div class="binding-panel"><div class="binding-panel__title">绑定到主账号</div><form class="binding-form js-bind-main-form"><select class="js-bind-main-select">' + renderBindingOptions(String(u.bound_main_user_id || '').trim()) + '</select><button type="submit" class="btn-remark js-bind-main-submit">保存绑定</button></form><div class="binding-hint">辅助账号池只用于归属管理和给主账号任务提供辅助账号来源，这里不提供单独业务操作入口。</div></div>'
+            : '') +
+          '</div>' +
+          '<div class="button-group" style="margin-top:12px">' +
+          '<button type="button" class="danger-button js-del">删除用户</button>' +
+          '</div>';
+        listEl.appendChild(li);
+      });
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      const uid = li.dataset.userId;
+
+      const actBtn = e.target.closest('button[data-action]');
+      if (actBtn) {
+        const action = actBtn.dataset.action;
+        actBtn.disabled = true;
+        try {
+          if (action === 'level') {
+            closeOperationPanels(li);
+            const d = await apiUser(uid, '/level');
+            setMsg('', false);
+            showLevelDetail(d);
+          } else if (action === 'sign-test') {
+            closeOperationPanels(li);
+            await apiUser(uid, '/sign-test', { method: 'POST' });
+            setMsg('签到已完成', false);
+          } else if (action === 'playids') {
+            closeOperationPanels(li, '.js-playids-panel');
+            togglePlayidsPanel(li);
+            setMsg('已展开刷歌表单，可直接修改参数后提交。', false);
+          } else if (action === 'ncmm-command') {
+            closeOperationPanels(li, '.js-ncmm-command-panel');
+            const panel = li.querySelector('.js-ncmm-command-panel');
+            if (panel) panel.classList.toggle('is-open');
+            setMsg('已展开 ncmm 直连命令面板，可直接执行 sign / note / fansgroup。', false);
+          } else if (action === 'musician') {
+            closeOperationPanels(li, '.js-musician-panel');
+            const panel = li.querySelector('.js-musician-panel');
+            if (panel) {
+              panel.classList.toggle('is-open');
+              const form = panel.querySelector('.js-musician-form');
+              if (form && panel.classList.contains('is-open')) {
+                syncMusicianForm(form);
+              }
+            }
+            setMsg('已展开音乐人任务面板，可选择 musician 命令模式。', false);
+          }
+        } catch (err) {
+          setMsg('操作失败：' + (err.message || String(err)), true);
+        } finally {
+          actBtn.disabled = false;
+        }
+        return;
+      }
+
+      if (e.target.classList.contains('js-playids-cancel')) {
+        togglePlayidsPanel(li, false);
+        setMsg('已收起刷歌表单', false);
+        return;
+      }
+
+      if (e.target.classList.contains('js-ncmm-command-run')) {
+        const btn = e.target;
+        const subcommand = String(btn.getAttribute('data-command') || '').trim();
+        if (!subcommand) return;
+        btn.disabled = true;
+        try {
+          setMsg('ncmm ' + subcommand + ' 执行中，请等待返回结果…', false);
+          const result = await apiUser(uid, '/ncmm/command', {
+            method: 'POST',
+            body: { command: subcommand },
+          });
+          setMsg(summarizeNcmmCommandResult(result, subcommand), false);
+        } catch (err) {
+          setMsg('操作失败：' + (err.message || String(err)), true);
+        } finally {
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      if (e.target.classList.contains('js-ncmm-command-cancel')) {
+        const panel = li.querySelector('.js-ncmm-command-panel');
+        if (panel) panel.classList.remove('is-open');
+        setMsg('已收起 ncmm 直连命令面板', false);
+        return;
+      }
+
+      if (e.target.classList.contains('js-musician-cancel')) {
+        const panel = li.querySelector('.js-musician-panel');
+        if (panel) panel.classList.remove('is-open');
+        setMsg('已收起音乐人任务面板', false);
+        return;
+      }
+
+      if (e.target.classList.contains('js-edit-remark')) {
+        const btn = e.target;
+        const current = btn.getAttribute('data-remark') || '';
+        const next = prompt('编辑备注（留空可清空）:', current);
+        if (next === null) return;
+        btn.disabled = true;
+        try {
+          await axios.patch(
+            '/admin/api/users/' + encodeURIComponent(uid) + '/remark',
+            { remark: next },
+            { withCredentials: true }
+          );
+          setMsg('备注已更新', false);
+          loadUsers();
+        } catch (err) {
+          const d = err.response && err.response.data;
+          const t = d && (d.detail || d.message);
+          alert(t != null ? (typeof t === 'string' ? t : JSON.stringify(t)) : err.message);
+        } finally {
+          btn.disabled = false;
+        }
+        return;
+      }
+      if (e.target.classList.contains('js-del')) {
+        if (!confirm('确定删除该用户？将删除其 JSON 文件。')) return;
+        try {
+          await axios.delete('/admin/api/users/' + encodeURIComponent(uid), { withCredentials: true });
+          loadUsers();
+        } catch (err) {
+          const d = err.response && err.response.data;
+          const t = d && (d.detail || d.message);
+          alert(t != null ? (typeof t === 'string' ? t : JSON.stringify(t)) : err.message);
+        }
+      }
+    });
+
+    listEl.addEventListener('change', function (e) {
+      const musicianForm = e.target.closest('.js-musician-form');
+      if (musicianForm) {
+        if (
+          e.target.classList.contains('js-musician-mode') ||
+          e.target.classList.contains('js-musician-enable-vip-play') ||
+          e.target.classList.contains('js-playids-mode') ||
+          e.target.classList.contains('js-playids-ids')
+        ) {
+          syncMusicianForm(musicianForm);
+        }
+      }
+
+      const form = e.target.closest('.js-playids-form');
+      if (!form) return;
+      if (e.target.classList.contains('js-playids-mode') || e.target.classList.contains('js-playids-ids')) {
+        syncPlayidsForm(form);
+      }
+    });
+
+    listEl.addEventListener('input', function (e) {
+      const musicianForm = e.target.closest('.js-musician-form');
+      if (musicianForm && e.target.classList.contains('js-playids-ids')) {
+        syncMusicianForm(musicianForm);
+      }
+
+      const form = e.target.closest('.js-playids-form');
+      if (!form) return;
+      if (e.target.classList.contains('js-playids-ids')) {
+        syncPlayidsForm(form);
+      }
+    });
+
+    listEl.addEventListener('submit', async function (e) {
+      const form = e.target.closest('.js-playids-form');
+      if (form) {
+        e.preventDefault();
+        const li = form.closest('li');
+        if (!li) return;
+        const uid = li.dataset.userId;
+        const submitBtn = form.querySelector('.js-playids-submit');
+        submitBtn.disabled = true;
+        try {
+          const payload = buildPlayidsPayloadFromForm(form);
+          const modeLabel = getPlayidsModeLabel(form.querySelector('.js-playids-mode').value);
+          setMsg('刷歌任务执行中，请等待返回结果…', false);
+          const result = await apiUser(uid, '/playids', { method: 'POST', body: payload });
+          if (result && typeof result === 'object' && result.mode == null) {
+            result.mode = modeLabel;
+          }
+          syncResolvedPlaylistCount(form, result);
+          setMsg(summarizePlayidsResult(result), false);
+        } catch (err) {
+          setMsg('操作失败：' + (err.message || String(err)), true);
+        } finally {
+          submitBtn.disabled = false;
+        }
+        return;
+      }
+
+      const musicianForm = e.target.closest('.js-musician-form');
+      if (musicianForm) {
+        e.preventDefault();
+        const li = musicianForm.closest('li');
+        if (!li) return;
+        const uid = li.dataset.userId;
+        const submitBtn = musicianForm.querySelector('.js-musician-submit');
+        submitBtn.disabled = true;
+        try {
+          const payload = buildMusicianPayloadFromForm(musicianForm);
+          setMsg('音乐人命令执行中，请等待返回结果…', false);
+          const result = await apiUser(uid, '/ncmm/musician', { method: 'POST', body: payload });
+          syncResolvedPlaylistCount(musicianForm, result);
+          const summary = summarizeMusicianResult(result, payload.mode);
+          if (summary && typeof summary === 'object' && summary.html) {
+            setMsg(summary.html, false, { html: true });
+          } else {
+            setMsg(summary && typeof summary === 'object' ? summary.text : String(summary), false);
+          }
+        } catch (err) {
+          setMsg('操作失败：' + (err.message || String(err)), true);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      }
+
+      const bindForm = e.target.closest('.js-bind-main-form');
+      if (bindForm) {
+        e.preventDefault();
+        const li = bindForm.closest('li');
+        if (!li) return;
+        const uid = li.dataset.userId;
+        const submitBtn = bindForm.querySelector('.js-bind-main-submit');
+        const select = bindForm.querySelector('.js-bind-main-select');
+        submitBtn.disabled = true;
+        try {
+          await axios.patch(
+            '/admin/api/users/' + encodeURIComponent(uid) + '/bind-main',
+            { main_user_id: String(select.value || '').trim() },
+            { withCredentials: true }
+          );
+          setMsg('主辅绑定已更新', false);
+          await loadUsers();
+        } catch (err) {
+          const d = err.response && err.response.data;
+          const t = d && (d.detail || d.message);
+          setMsg('操作失败：' + (t != null ? (typeof t === 'string' ? t : JSON.stringify(t)) : (err.message || String(err))), true);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      }
+    });
+
+    async function loadUsers() {
+      setMsg('加载中…', false);
+      try {
+        const response = await axios.get('/admin/api/users', { withCredentials: true });
+        const users = response.data.users || [];
+        allUsersData = users;
+        buildWorkspaceSummary();
+        if (!users.length) {
+          listEl.innerHTML = '';
+          searchResultInfo.style.display = 'none';
+          searchResultInfo.textContent = '';
+          setMsg('暂无用户，请让用户先在首页完成浏览器扫码登录。', false);
+          return;
+        }
+        setMsg('共 ' + users.length + ' 个用户', false);
+        filterUsers(userSearchInput.value.trim());
+      } catch (e) {
+        if (e.response && e.response.status === 401) {
+          location.href = '/admin/login';
+          return;
+        }
+        const d = e.response && e.response.data;
+        const msgText = d && (d.detail || d.message);
+        setMsg('加载失败: ' + (msgText != null ? (typeof msgText === 'string' ? msgText : JSON.stringify(msgText)) : e.message), true);
+      }
+    }
+
+    userSearchInput.addEventListener('input', function () {
+      filterUsers(this.value);
+    });
+
+    workspaceTabs.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        currentWorkspace = btn.dataset.workspace === 'secondary' ? 'secondary' : 'main';
+        updateWorkspaceTabs();
+        roleFilterSelect.value = 'all';
+        filterUsers(userSearchInput.value.trim());
+      });
+    });
+
+    roleFilterSelect.addEventListener('change', function () {
+      filterUsers(userSearchInput.value);
+    });
+
+    searchClearBtn.addEventListener('click', function () {
+      userSearchInput.value = '';
+      roleFilterSelect.value = 'all';
+      filterUsers('');
+      userSearchInput.focus();
+    });
+    document.getElementById('logout').onclick = async () => {
+      try {
+        await axios.post('/admin/api/logout', null, { withCredentials: true });
+      } catch (_) {}
+      location.href = '/admin/login';
+    };
+
+    updateWorkspaceTabs();
+    loadUsers();
+  </script>
+</body>
+</html>

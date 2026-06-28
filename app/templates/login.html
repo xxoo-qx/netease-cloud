@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>网易云登录</title>
+  <link rel="icon" href="/static/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary-color: #d33a31;
+      --primary-hover-color: #b72c25;
+      --danger-color: #e74c3c;
+      --danger-hover-color: #c0392b;
+      --background-color: #f0f2f5;
+      --container-bg-color: #ffffff;
+      --text-color: #333;
+      --label-color: #555;
+      --border-color: #ddd;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      background: linear-gradient(135deg, #ece9e6, #ffffff);
+      color: var(--text-color);
+    }
+    .container {
+      background: var(--container-bg-color);
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo { margin-bottom: 1.5rem; text-align: center; }
+    .logo img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      margin-bottom: 1.25rem;
+      color: var(--text-color);
+      font-weight: 700;
+      font-size: 1.35rem;
+    }
+    #qr-login-section { display: block; margin-bottom: 1.5rem; }
+    .form-group {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--label-color);
+      font-weight: 400;
+    }
+    input,
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+      background: #fff;
+    }
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(211, 58, 49, 0.2);
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 8px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      margin-top: 0.5rem;
+    }
+    .btn-primary:first-of-type { margin-top: 0; }
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-hover-color);
+      transform: translateY(-2px);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .qrcode-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    #qrcode-display {
+      width: 200px;
+      height: 200px;
+      margin: 1rem auto;
+    }
+    .qrcode-container img,
+    .qrcode-container canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+    .info {
+      margin-top: 1rem;
+      font-weight: 400;
+      min-height: 1.5em;
+      font-size: 0.95rem;
+    }
+    .message-success { color: var(--success-color); }
+    .message-error { color: var(--error-color); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="/static/icon.png" alt="网易云" width="80" height="80" />
+    </div>
+    <h1>网易云登录</h1>
+
+    <div id="qr-login-section">
+      <div class="form-group">
+        <label for="qr-account-role">扫码登录角色</label>
+        <select id="qr-account-role">
+          <option value="main" selected>主账号</option>
+          <option value="secondary">辅助账号</option>
+        </select>
+      </div>
+      <div class="qrcode-container">
+        <div id="qrcode-display"></div>
+        <p id="qrcode-status" style="margin-top: 1rem;">点击下方按钮获取二维码</p>
+      </div>
+      <button type="button" class="btn-primary" id="refreshQrBtn">获取二维码</button>
+      <div id="info" class="info"></div>
+    </div>
+
+  </div>
+  <script>
+(function () {
+  let browserQrSessionId = '';
+  let pollTimer = null;
+  let autoRestartingSession = false;
+
+  const $ = (id) => document.getElementById(id);
+  const qrInfo = $('info');
+  const qrStatus = $('qrcode-status');
+
+  function currentAccountRole() {
+    const value = $('qr-account-role')?.value || 'main';
+    return value === 'secondary' ? 'secondary' : 'main';
+  }
+
+  function pickNickname(d) {
+    if (!d || typeof d !== 'object') return '';
+    const top = (d.nickname || '').trim();
+    if (top) return top;
+    const p = d.profile;
+    if (p && typeof p === 'object' && p.nickname) return String(p.nickname).trim();
+    return '';
+  }
+
+  function setQrInfo(text, ok) {
+    qrInfo.textContent = text || '';
+    qrInfo.className = 'info' + (ok === true ? ' message-success' : ok === false ? ' message-error' : '');
+  }
+
+  async function apiJson(url, opts) {
+    const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts));
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const err = data.detail || data.message || data.msg || r.statusText;
+      throw new Error(typeof err === 'string' ? err : JSON.stringify(err));
+    }
+    return data;
+  }
+
+  function stopQrPoll() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function resetQrState() {
+    browserQrSessionId = '';
+  }
+
+  function isSessionExpiredError(message) {
+    return String(message || '').includes('扫码会话不存在或已过期');
+  }
+
+  function applyBrowserQrStatus(state, message) {
+    if (state === 'scanned') {
+      qrStatus.textContent = message || '已扫码，请在手机上确认';
+      setQrInfo('已检测到扫码，等待手机确认', true);
+      return;
+    }
+    if (state === 'expired') {
+      qrStatus.textContent = message || '二维码已过期，正在刷新';
+      setQrInfo('二维码已自动刷新，请重新扫码', null);
+      return;
+    }
+    if (state === 'success') {
+      qrStatus.textContent = message || '登录成功';
+      return;
+    }
+    qrStatus.textContent = message || '等待扫码';
+    setQrInfo('等待扫码…', null);
+  }
+
+  function paintQrImageDataUrl(dataUrl) {
+    const el = $('qrcode-display');
+    el.innerHTML = '';
+    if (!dataUrl) return;
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = '网易云登录二维码';
+    img.width = 200;
+    img.height = 200;
+    el.appendChild(img);
+  }
+
+  async function startBrowserQrLogin() {
+    stopQrPoll();
+    resetQrState();
+    autoRestartingSession = false;
+    setQrInfo('', null);
+    qrStatus.textContent = '正在生成二维码…';
+    $('qrcode-display').innerHTML = '';
+    try {
+      const data = await apiJson('/api/login/browser-qrcode/create', {
+        method: 'POST',
+        body: JSON.stringify({ account_role: currentAccountRole() }),
+      });
+      browserQrSessionId = data.session_id;
+      paintQrImageDataUrl(data.qr_image_data_url);
+      qrStatus.textContent = '请使用网易云音乐 App 或微信扫码并确认';
+      setQrInfo(data.message || '二维码已生成', true);
+      pollTimer = setInterval(pollBrowserQrOnce, 3000);
+      pollBrowserQrOnce();
+    } catch (e) {
+      autoRestartingSession = false;
+      qrStatus.textContent = '创建失败';
+      setQrInfo(e.message, false);
+    }
+  }
+
+  async function pollBrowserQrOnce() {
+    if (!browserQrSessionId) return;
+    try {
+      const data = await apiJson('/api/login/browser-qrcode/poll', {
+        method: 'POST',
+        body: JSON.stringify({ session_id: browserQrSessionId }),
+      });
+      const code = data.code;
+      const msg = data.message || data.msg || ('状态码: ' + code);
+      if (data.qr_image_data_url) {
+        paintQrImageDataUrl(data.qr_image_data_url);
+      }
+      if (code === 803 || data.logged_in) {
+        stopQrPoll();
+        if (data.user_id) {
+          localStorage.setItem('netease_last_user_id', data.user_id);
+        }
+        const qn = pickNickname(data);
+        applyBrowserQrStatus('success', qn ? '登录成功：' + qn : msg);
+        if (qn) {
+          setQrInfo('浏览器扫码成功，已导入完整 Cookie（' + qn + '）', true);
+        } else {
+          setQrInfo('浏览器扫码成功，已导入完整 Cookie', true);
+        }
+        return;
+      }
+      applyBrowserQrStatus(data.state, msg);
+      if (code === 800 && data.refreshed) {
+        return;
+      }
+    } catch (e) {
+      if (isSessionExpiredError(e.message) && !autoRestartingSession) {
+        autoRestartingSession = true;
+        qrStatus.textContent = '扫码会话已过期，正在自动重新获取二维码…';
+        setQrInfo('扫码会话已过期，正在自动重新获取二维码…', null);
+        void startBrowserQrLogin();
+        return;
+      }
+      autoRestartingSession = false;
+      setQrInfo(e.message, false);
+      stopQrPoll();
+    }
+  }
+
+  $('refreshQrBtn').onclick = () => {
+    void startBrowserQrLogin();
+  };
+
+})();
+  </script>
+</body>
+</html>

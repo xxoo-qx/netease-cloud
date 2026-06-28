@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员登录</title>
+  <link rel="icon" href="/static/icon.png" type="image/png" />
+  <style>
+    :root {
+      --background-color: #f0f2f5;
+      --card-background-color: #ffffff;
+      --text-color: #333;
+      --primary-color: #007bff;
+      --primary-hover-color: #0056b3;
+      --border-color: #e9ecef;
+      --error-color: #dc3545;
+      --error-background-color: #f8d7da;
+      --error-border-color: #f5c6cb;
+      --success-color: #28a745;
+      --success-background-color: #d4edda;
+      --success-border-color: #c3e6cb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-container {
+      background-color: var(--card-background-color);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 2.2em;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .input-group input[type="text"],
+    .input-group input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1.1em;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-group input[type="text"]:focus,
+    .input-group input[type="password"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+      outline: none;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 600;
+      width: 100%;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+      background-color: var(--primary-hover-color);
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .message {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1em;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      text-align: left;
+    }
+
+    .message.block {
+      display: block;
+      opacity: 1;
+    }
+
+    .message.error {
+      background-color: var(--error-background-color);
+      color: var(--error-color);
+      border: 1px solid var(--error-border-color);
+    }
+
+    .message.success {
+      background-color: var(--success-background-color);
+      color: var(--success-color);
+      border: 1px solid var(--success-border-color);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>管理员登录</h1>
+    <div class="input-group">
+      <label for="username">用户名:</label>
+      <input type="text" id="username" name="username" autocomplete="username" placeholder="请输入用户名" />
+    </div>
+    <div class="input-group">
+      <label for="password">密码:</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" placeholder="请输入密码" />
+    </div>
+    <button type="button" id="loginBtn">登录</button>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(element, text, isError) {
+      element.textContent = text;
+      element.classList.remove('error', 'success', 'block');
+      element.classList.add(isError ? 'error' : 'success', 'block');
+      element.style.display = 'block';
+      if (isError) {
+        setTimeout(() => {
+          element.classList.remove('block', 'error', 'success');
+          element.style.display = 'none';
+          element.textContent = '';
+        }, 5000);
+      }
+    }
+
+    async function handleLogin() {
+      messageDiv.style.display = 'none';
+      messageDiv.classList.remove('error', 'success', 'block');
+      messageDiv.textContent = '';
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      try {
+        const r = await fetch('/admin/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.success) {
+          showMessage(messageDiv, data.message || '登录成功', false);
+          setTimeout(() => {
+            window.location.href = '/admin';
+          }, 1000);
+        } else {
+          let m = data.detail ?? data.message ?? '登录失败';
+          if (typeof m !== 'string') {
+            m = Array.isArray(m) ? (m[0] && (m[0].msg || m[0].type)) || '登录失败' : '登录失败';
+          }
+          showMessage(messageDiv, m, true);
+        }
+      } catch (e) {
+        showMessage(messageDiv, '登录失败: ' + e.message, true);
+      }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    usernameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLogin();
+      }
+    });
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLogin();
+      }
+    });
+  </script>
+</body>
+</html>

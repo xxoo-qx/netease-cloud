@@ -1,0 +1,15 @@
+services:
+  netease-cloud:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: netease-cloud-main:local
+    container_name: netease-cloud-main
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./user_data:/data/user_data
+      - ./docker-data/ncmm-home:/data/ncmm-home

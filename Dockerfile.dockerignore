@@ -1,0 +1,15 @@
+.env
+.env.docker
+.venv/
+.venv/**
+__pycache__/
+**/__pycache__/
+user_data/
+user_data/**
+docker-data/
+docker-data/**
+*.log
+.git/
+.git/**
+.idea/
+.vscode/
