@@ -80,7 +80,7 @@ python run.py
 这套 Docker 编排只依赖当前仓库，不再要求把 `ncmm-main` 一起上传到 GitHub：
 
 ```text
-D:\py\netease-cloud-main
+C:\projects\netease-cloud-main
 ```
 
 如果你用 GitHub Actions、Docker Hub、GHCR 或其他远程构建器生成镜像，只上传 `netease-cloud-main` 即可。
@@ -102,7 +102,9 @@ ghcr.io/<你的 GitHub 用户名或组织名>/netease-cloud-main
 
 ### 首次启动
 
-在 `D:\py\netease-cloud-main` 下执行：
+以下本地路径均为示例，请替换成你自己的实际目录。
+
+在 `C:\projects\netease-cloud-main` 下执行：
 
 ```bash
 cp .env.docker.example .env.docker
@@ -216,6 +218,15 @@ docker compose up -d
 POST /api/login/browser-qrcode/create
 ```
 
+请求体可选传入账号角色；默认保存为主账号：
+
+```json
+{ "account_role": "main" }
+```
+
+- `main`：主账号
+- `secondary`：辅助账号
+
 响应含 **`session_id`**，服务端会在后台受控浏览器里打开网易云登录页，并把提取到的二维码返回给当前页面展示。
 
 2. 轮询受控浏览器登录状态：
@@ -269,13 +280,19 @@ POST /api/users/{user_id}/playids
 - `ids`：直接指定歌曲 ID 列表
 - `ids_file`：从本地文本文件或 `http/https` URL 读取歌曲 ID
 - `idsFile`：批量 YAML 配置里的兼容写法，等价于 `ids_file`
+- `playlist_id`：单个网易云歌单 ID；后端会先解析歌单，再转成显式歌曲池
+- `playlist_ids`：多个网易云歌单 ID；后端会合并解析并自动去重
 - `count`：候选歌曲收集数量；显式 `ids` 模式下通常会自动对齐到歌曲数
 - `daily_min` / `daily_max`：每日随机目标范围
 - `run_min` / `run_max`：本次运行随机目标范围
 - `gap_min` / `gap_max`：两首歌之间随机间隔秒数
 - `mix_enabled` / `mix_ratio`：是否混入日推与混入比例
 
-优先级说明：当前版本只支持显式歌曲池；必须传 `ids` 或 `ids_file`，不再回退到 `playlist_id / track_pool`。
+优先级说明：
+
+- 优先使用显式歌曲池：`ids` 或 `ids_file`
+- 如果没有传显式歌曲池，也支持传 `playlist_id` 或 `playlist_ids`，由后端先解析歌单再执行
+- `track_pool`、`rotate_playlists` 仍保留为兼容字段，但当前 `ncmm` 收口模式下不再作为主流程输入
 
 `ids` 支持两种常见形式：
 
@@ -298,14 +315,33 @@ POST /api/users/{user_id}/playids
 
 如果显式歌曲池在去重后数量小于本次需要收集的 `count`，接口会直接报错，而不会再回退到歌单池。
 
+歌单模式示例：
+
+```json
+{
+  "playlist_ids": [1234567890, 2234567890],
+  "count": 200,
+  "mix_enabled": false
+}
+```
+
 #### 🗂️ Playids 批量任务
 
 ```
 POST /api/playids/batch
 {
-  "config_path": "./playids_tasks.yaml"
+  "config_path": "./playids_tasks.yaml",
+  "only_user_ids": ["your_user_id_1"],
+  "strict_user_mapping": true
 }
 ```
+
+请求体字段说明：
+
+- `config_path`：批量任务 YAML 路径
+- `only_user_ids`：可选，只执行这些本地 `user_id`
+- `strict_user_mapping`：`ncmm-main` 兼容模式下要求配置里显式提供 user_id 映射
+- `use_all_users`：`ncmm-main` 兼容模式下扫描本地全部 `user_id`，作为兜底模式
 
 配置文件示例：
 
@@ -351,6 +387,19 @@ playids:
   enableMain: false
   enableSecondaries: true
   daily_min: 50
+  daily_max: 200
+  run_min: 0
+  run_max: 0
+  gap_min: 10
+  gap_max: 30
+  idsFile:
+    - "https://example.com/song_ids.txt"
+
+mixPlay:
+  enabled: true
+  dailyRecommendRatio: 0.3
+  countTarget: false
+```
 
 #### 🧩 Ncmm Task 编排
 
@@ -377,7 +426,30 @@ POST /api/users/{user_id}/ncmm/task
 - 服务端会临时生成一份最小 `config.yaml`，然后执行 `ncmm task`。
 - 如果 `.env` 配置了 `NCMM_BIN` 且文件存在，会优先直接调用编译好的 `ncmm.exe`；否则回退到 `go run .`。
 - 至少要开启一个子任务，否则会返回 `400`。
+- 如果勾选 `playids`，还需要在 `playids_options` 中提供显式歌曲池或歌单解析参数。
 - 返回体里会带 `successful_tasks`、`failed_tasks`、`stdout`、`stderr`，便于排查。
+
+#### 🧪 Ncmm 直连子命令
+
+```
+POST /api/users/{user_id}/ncmm/command
+```
+
+请求体示例：
+
+```json
+{
+  "command": "sign"
+}
+```
+
+当前只支持这些子命令：
+
+- `sign`
+- `note`
+- `fansgroup`
+
+这个接口用于直接桥接执行单个 `ncmm` 子命令，复用当前 Web 用户登录态。
 
 #### 🎖️ 音乐人任务
 
@@ -415,21 +487,21 @@ POST /api/users/{user_id}/ncmm/musician
 推荐做法是在 `ncmm-main` 下先编译 exe：
 
 ```powershell
-cd D:\py\ncmm-main
+cd C:\projects\ncmm-main
 go build -o bin/ncmm.exe .
 ```
 
 然后在当前项目 `.env` 中显式配置：
 
 ```env
-NCMM_PROJECT_DIR=D:\py\ncmm-main
-NCMM_BIN=D:\py\ncmm-main\bin\ncmm.exe
-NCMM_HOME_DIR=D:\py\ncmm-main\.work
+NCMM_PROJECT_DIR=C:\projects\ncmm-main
+NCMM_BIN=C:\projects\ncmm-main\bin\ncmm.exe
+NCMM_HOME_DIR=C:\projects\ncmm-main\.work
 ```
 
 注意：这里的 `NCMM_HOME_DIR` 现在表示“根目录”而不是“单账号目录”。
 程序会自动使用 `NCMM_HOME_DIR/<user_id>` 作为每个账号各自的 `ncmm --home` 目录。
-所以像 `D:\py\ncmm-main\.work` 这样的父级路径可以继续用；只有当你之前把它写成某个具体账号子目录时，才需要改回父级根目录。
+所以像 `C:\projects\ncmm-main\.work` 这样的父级路径可以继续用；只有当你之前把它写成某个具体账号子目录时，才需要改回父级根目录。
 
 为了避免任务很多时桥接层占用过高，这一层还提供了三个可选环境变量：
 
@@ -438,19 +510,6 @@ NCMM_HOME_DIR=D:\py\ncmm-main\.work
 - `NCMM_IDS_INLINE_LIMIT`：显式歌曲 ID 超过这个数量时，桥接层自动把它们写入临时 `ids_file`，避免超长命令行，默认 `1000`
 
 这样 Web 端桥接 `playids`、`task`、`musician*` 时会优先直调 exe，不再依赖请求时即时 `go run` 编译。
-  daily_max: 200
-  run_min: 0
-  run_max: 0
-  gap_min: 10
-  gap_max: 30
-  idsFile:
-    - "https://example.com/song_ids.txt"
-
-mixPlay:
-  enabled: true
-  dailyRecommendRatio: 0.3
-  countTarget: false
-```
 
 另外，当前服务也支持通过环境变量 `NCMM_USER_AGENT_CONFIG` 注入 `ncmm-main` 风格的三层 UA 配置，例如：
 
